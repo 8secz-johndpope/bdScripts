@@ -59,7 +59,7 @@ class Char(object):
 
     def createMainController(self):
         self.ch_main_ctrl = self.ch_name + '_' + CHCTRL
-        ctrl = CTRL.Controller(name=self.ch_main_ctrl, scale=80, ctrlType='circle')
+        ctrl = CTRL.Controller(name=self.ch_main_ctrl, scale=80, shape='circle')
         ctrl.buildController()
         ctrl_parent = pm.listRelatives(self.ch_main_ctrl, p=1, type='transform')[0]
 

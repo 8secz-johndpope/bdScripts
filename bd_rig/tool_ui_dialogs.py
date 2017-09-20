@@ -8,11 +8,13 @@ import ui.blueprint_settings as blueprint_settings
 import blueprints.character as char
 import mRigGlobals as MRIGLOBALS
 from utils import libWidgets as UI
+import ui.character_dialog as char_dlg
 
 reload(MRIGLOBALS)
 reload(char)
 reload(blueprint_settings)
 reload(char_settings)
+reload(char_dlg)
 reload(UI)
 
 try:
@@ -114,16 +116,16 @@ class ToolWindow(QMainWindow):
 
         char_box = UI.TitledBox(title='Character')
 
-        self.char_settings = char_settings.CharSettingsWidget()
-        name_layout = UI.HorBox()
-        self.char_name = UI.LabelEditWidget(label='Character name:', label_size=85, edit_size=80)
-        self.char_name_suffix = UI.LabelEditWidget(label='+', label_size=10, edit_size=40)
-        self.char_name_suffix.edit.setText('_' + MRIGLOBALS.CHAR)
-
-        name_layout.addWidget(self.char_name)
-        name_layout.addWidget(self.char_name_suffix)
-
-        title = UI.TitleBar(title='Name')
+        # self.char_settings = char_settings.CharSettingsWidget()
+        # name_layout = UI.HorBox()
+        # self.char_name = UI.LabelEditWidget(label='Character name:', label_size=85, edit_size=80)
+        # self.char_name_suffix = UI.LabelEditWidget(label='+', label_size=10, edit_size=40)
+        # self.char_name_suffix.edit.setText('_' + MRIGLOBALS.CHAR)
+        #
+        # name_layout.addWidget(self.char_name)
+        # name_layout.addWidget(self.char_name_suffix)
+        #
+        # title = UI.TitleBar(title='Name')
         btn_layout = UI.HorBox()
         new_char_btn = UI.ButtonB('NEW')
         new_char_btn.setStyleSheet("background-color: rgb(0,100,200); font-weight: bold")
@@ -133,9 +135,9 @@ class ToolWindow(QMainWindow):
 
         separator = UI.Separator()
 
-        char_box.layout.addWidget(self.char_settings)
-        char_box.layout.addWidget(title)
-        char_box.layout.addLayout(name_layout)
+        # char_box.layout.addWidget(self.char_settings)
+        # char_box.layout.addWidget(title)
+        # char_box.layout.addLayout(name_layout)
         char_box.layout.addWidget(separator)
         char_box.layout.addLayout(btn_layout)
 
@@ -224,21 +226,21 @@ class ToolWindow(QMainWindow):
         Creates a new character
         """
         pm.undoInfo(openChunk=True)
-        char_name = self.char_name.edit.text()
-        char_suffix = self.char_name_suffix.edit.text()
-        # char_root_name = self.char_settings.root_name.edit.text()
-        left_str = self.char_settings.left_str.edit.text()
-        right_str = self.char_settings.right_str.edit.text()
+        char_dialog = char_dlg.CharSettingsDialog(parent=self)
+        result = char_dialog.exec_()
+        if result == QDialog.Accepted:
+            char_name, char_suffix = char_dialog.get_name()
+            left_str, right_str = char_dialog.get_mirror_strings()
 
-        if len(char_name) and len(char_suffix):
-            char_name = char_name + char_suffix
-            self.character = char.Char(name=char_name, leftString=left_str, rightString=right_str)
-            self.character.create()
-            self.info_dock.infoDisplay.append('Created %s character' % char_name)
-            # list_item = QListWidgetItem()
-            # list_item.setText(self.character.chRootName)
-            # list_item.setTextAlignment(Qt.AlignHCenter)
-            # self.bp_list.addItem(list_item)
+            if len(char_name) and len(char_suffix):
+                char_name = char_name + char_suffix
+                self.character = char.Char(name=char_name, leftString=left_str, rightString=right_str)
+                self.character.create()
+                self.info_dock.infoDisplay.append('Created %s character' % char_name)
+                # list_item = QListWidgetItem()
+                # list_item.setText(self.character.chRootName)
+                # list_item.setTextAlignment(Qt.AlignHCenter)
+                # self.bp_list.addItem(list_item)
 
         pm.undoInfo(closeChunk=True)
 

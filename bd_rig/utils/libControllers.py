@@ -11,8 +11,9 @@ class Controller(object):
         self.ctrlScale = kargs.setdefault('scale', 3)
         self.ctrlShape = kargs.setdefault('shape', 'circle')
         self.ctrlAxis = kargs.setdefault('axis', [0, 1, 0])
+        self.ctrlPos = kargs.setdefault('pos', [0, 0, 0])
         self.ctrlGrp = None
-        self.ctrlPos = [0, 0, 0]
+        # self.ctrlPos = [0, 0, 0]
         self.ctrlRot = [0, 0, 0]
         self.ctrlPoints = []
         self.ctrlFolder = ''

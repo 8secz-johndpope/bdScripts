@@ -70,15 +70,15 @@ class Blueprint(object):
         pm.parent(self.bpGuidesGrp, self.bpTopGrp)
 
     def createController(self):
-        ctrlPos = self.bpGuidesPos[0]['pos']
-        newCtrl = CTRL.Controller(ctrlName=self.bpName + '_' + BPCTRL, scale=4, ctrlType=self.bpCtrlShape,
-                                  ctrlPos=ctrlPos)
-        self.bpController = newCtrl.buildController()
+        ctrl_pos = self.bpGuidesPos[0]['pos']
+        self.bpController = self.bpName + '_' + BPCTRL
+        self.bpController = self.bpName + '_' + BPCTRL
+        new_ctrl = CTRL.Controller(name=self.bpController, scale=4, shape=self.bpCtrlShape, pos=ctrl_pos)
+        new_ctrl.buildController()
+        print "--------------------------------------", self.bpCtrlShape, "--------------------------------------"
+        ctrl_parent = pm.listRelatives(self.bpController, p=1, type='transform')[0]
 
-        controllerParent = pm.listRelatives(self.bpController, p=1, type='transform')[
-            0]  # pm.listConnections('%s.parent'%self.bpController)[0]
-
-        pm.parent(controllerParent, self.bpTopGrp)
+        pm.parent(ctrl_parent, self.bpTopGrp)
         pm.parent(self.bpGuidesGrp, self.bpController)
 
     def createGuides(self):
@@ -97,8 +97,8 @@ class Blueprint(object):
             guidePos = data['pos']
 
             # if index == 0:
-            # controllerParent = pm.listConnections('%s.parent'%self.bpController)[0]
-            # pm.xform(controllerParent,t=guidePos,ws=1)
+            # ctrl_parent = pm.listConnections('%s.parent'%self.bpController)[0]
+            # pm.xform(ctrl_parent,t=guidePos,ws=1)
             pm.select(cl=1)
 
             guide = pm.joint(name=guideName, p=guidePos)
@@ -160,7 +160,7 @@ class Blueprint(object):
         for i in range(numCvs):
             linkCls = pm.cluster(linkCrv.name() + '.cv[' + str(i) + ']', name=linkCrv.name() + '_cls_' + str(i))[1]
             linkCls.visibility.set(0)
-            pm.parent(linkCls, self.bpCharacter.chLinksGrp)
+            pm.parent(linkCls, self.bpCharacter.ch_links_grp)
             clusters.append(linkCls)
 
         pm.pointConstraint(guide0, clusters[0], mo=1)
@@ -172,7 +172,7 @@ class Blueprint(object):
         # pm.skinPercent(skinCls.name(),linkCrv+ '.cv[0]',tv=[(guide0,1)])
 
 
-        pm.parent(linkCrv, self.bpCharacter.chLinksGrp)
+        pm.parent(linkCrv, self.bpCharacter.ch_links_grp)
 
     def setParent(self, newParent):
         self.bpParent = newParent

@@ -30,11 +30,11 @@ class BlueprintSettingsWidget(QWidget):
         self.setup_ui()
 
     def setup_ui(self):
-        mainLayout = UI.VertBox()
+        main_layout = UI.VertBox()
         self.bp_ui_layout = UI.VertBox()
 
         separator = UI.Separator()
-        titleBar = UI.TitleBar(title=self.bp_type.title() + ' Settings', height=14)
+        title_bar = UI.TitleBar(title=self.bp_type.title() + ' Settings', height=14)
 
         self.bp_name = UI.LabelEditWidget(label='Enter name:')
         self.bp_name.layout.setContentsMargins(5, 0, 5, 0)
@@ -68,12 +68,12 @@ class BlueprintSettingsWidget(QWidget):
         self.bp_ui_layout.addWidget(self.bp_length)
         self.bp_ui_layout.addWidget(self.bp_guide_size)
 
-        mainLayout.addWidget(separator)
-        mainLayout.addWidget(titleBar)
-        mainLayout.addLayout(self.bp_ui_layout)
-        mainLayout.addWidget(self.create_bp_btn)
+        main_layout.addWidget(separator)
+        main_layout.addWidget(title_bar)
+        main_layout.addLayout(self.bp_ui_layout)
+        main_layout.addWidget(self.create_bp_btn)
 
-        self.setLayout(mainLayout)
+        self.setLayout(main_layout)
 
     def getType(self):
         return self.bp_type
