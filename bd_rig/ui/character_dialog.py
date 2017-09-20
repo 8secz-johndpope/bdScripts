@@ -37,8 +37,11 @@ class CharSettingsDialog(QDialog):
         self.title_bar = UI.TitleBar(title='Settings', height=14)
 
         row1_layout = UI.HorBox()
+        row1_layout.setContentsMargins(3, 0, 0, 0)
         row2_layout = UI.HorBox()
+        row2_layout.setContentsMargins(3, 0, 0, 0)
         row3_layout = UI.HorBox()
+        row3_layout.setContentsMargins(3, 0, 3, 3)
 
         self.name_edit = UI.LabelEditWidget(label='Character name', label_size=100, edit_size=80)
         self.suffix_edit = UI.LabelEditWidget(label='+', label_size=10, edit_size=40)
