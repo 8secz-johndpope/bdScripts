@@ -336,7 +336,7 @@ class ToolWindow(QMainWindow):
 
             self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
 
-            self.bp_settings_ui.create_bp_btn.clicked.connect(self.createBlueprint)
+            self.bp_settings_ui.create_bp_btn.clicked.connect(self.create_blueprint)
             self.bp_settings_ui.bp_parent.pickBtn.clicked.connect(self.setBlueprintParent)
 
         else:
@@ -347,10 +347,9 @@ class ToolWindow(QMainWindow):
             self.tabs.setCurrentIndex(0)
             self.char_name.edit.setFocus()
 
-    def createBlueprint(self):
+    def create_blueprint(self):
         """
         Clicked slot from self.bp_settings_ui.create_bp_btn
-
         It will create the blueprint in Maya
         """
         pm.undoInfo(openChunk=True)
@@ -469,7 +468,7 @@ class ToolWindow(QMainWindow):
 
             self.bp_settings_ui.bp_parent.edit.setText(str(blueprint.bpParent))
             self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
-            self.bp_settings_ui.create_bp_btn.clicked.connect(self.createBlueprint)
+            self.bp_settings_ui.create_bp_btn.clicked.connect(self.create_blueprint)
             self.bp_settings_ui.bp_parent.pickBtn.clicked.connect(self.setBlueprintParent)
         else:
             pm.warning('No character created !!!')

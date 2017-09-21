@@ -77,7 +77,7 @@ class TitledBox(QGroupBox):
 
 
 class LabelEditWidget(QWidget):
-    def __init__(self, parent=None, label='', label_size=MIN_LABEL_WIDTH, edit_size=MIN_LABEL_WIDTH):
+    def __init__(self, parent=None, label='', label_size=MIN_LABEL_WIDTH, edit_size=-1):
         super(LabelEditWidget, self).__init__(parent)
         self.label_name = label
         self.label_size = label_size
@@ -99,7 +99,10 @@ class LabelEditWidget(QWidget):
             self.label.setFixedWidth(self.label_size)
 
         self.edit = QLineEdit()
-        self.edit.setFixedWidth(self.edit_size)
+        if self.edit_size > 0:
+            self.edit.setFixedWidth(self.edit_size)
+        else:
+            self.edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.addWidget(self.edit, Qt.AlignLeft)
 
         main_layout.addLayout(self.layout)
@@ -111,6 +114,7 @@ class ObjectPickerWidget(QWidget):
         super(ObjectPickerWidget, self).__init__(parent)
         self.labelTitle = label
         self.label = None
+        self.layout = None
 
         self.setup_ui()
 

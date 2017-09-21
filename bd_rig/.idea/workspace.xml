@@ -3,11 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="5d711ea2-5621-4969-b5dc-8aeee7397b13" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/blueprints/blueprint.py" afterPath="$PROJECT_DIR$/blueprints/blueprint.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/blueprints/character.py" afterPath="$PROJECT_DIR$/blueprints/character.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tool_ui.py" afterPath="$PROJECT_DIR$/tool_ui.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ui/blueprint_settings.py" afterPath="$PROJECT_DIR$/ui/blueprint_settings.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/libControllers.py" afterPath="$PROJECT_DIR$/utils/libControllers.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tool_ui_dialogs.py" afterPath="$PROJECT_DIR$/tool_ui_dialogs.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ui/character_dialog.py" afterPath="$PROJECT_DIR$/ui/character_dialog.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/utils/libWidgets.py" afterPath="$PROJECT_DIR$/utils/libWidgets.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -21,23 +20,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="tool_ui.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tool_ui.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="264">
-              <caret line="117" column="19" lean-forward="false" selection-start-line="117" selection-start-column="8" selection-end-line="117" selection-end-column="19" />
-              <folding>
-                <element signature="e#0#27#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="tool_ui_dialogs.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/tool_ui_dialogs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="580">
-              <caret line="242" column="49" lean-forward="true" selection-start-line="242" selection-start-column="49" selection-end-line="242" selection-end-column="49" />
+            <state relative-caret-position="394">
+              <caret line="247" column="33" lean-forward="false" selection-start-line="247" selection-start-column="33" selection-end-line="247" selection-end-column="33" />
               <folding>
                 <element signature="e#0#27#0" expanded="true" />
               </folding>
@@ -58,8 +45,8 @@
       <file leaf-file-name="libWidgets.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utils/libWidgets.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" column="0" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+            <state relative-caret-position="496">
+              <caret line="132" column="32" lean-forward="true" selection-start-line="132" selection-start-column="18" selection-end-line="132" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -68,18 +55,18 @@
       <file leaf-file-name="character_dialog.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ui/character_dialog.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="635">
-              <caret line="55" column="45" lean-forward="true" selection-start-line="55" selection-start-column="45" selection-end-line="55" selection-end-column="45" />
+            <state relative-caret-position="431">
+              <caret line="94" column="0" lean-forward="false" selection-start-line="94" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="character.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/blueprints/character.py">
+      <file leaf-file-name="blueprint_dialog.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ui/blueprint_dialog.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-51">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="363">
+              <caret line="101" column="24" lean-forward="true" selection-start-line="101" selection-start-column="24" selection-end-line="101" selection-end-column="24" />
               <folding />
             </state>
           </provider>
@@ -96,25 +83,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>usin</find>
-      <find>shiboken</find>
-      <find>qTextEdit</find>
-      <find>qWidget</find>
-      <find>bpCharList</find>
-      <find>lists_widget</find>
-      <find>bp_char_list</find>
-      <find>listsWidget</find>
-      <find>utils</find>
-      <find>skeleton_box</find>
-      <find>self.char_box</find>
-      <find>import_python_module</find>
-      <find>getBlueprintsList</find>
-      <find>splitSeparator</find>
-      <find>self.char_settings</find>
-      <find>rightString</find>
-      <find>chSkeletonGrp</find>
-      <find>mainLayout</find>
-      <find>setupUI</find>
       <find>labelName</find>
       <find>width</find>
       <find>SpinBox</find>
@@ -126,9 +94,27 @@
       <find>SingleBlueprint</find>
       <find>chLinksGrp</find>
       <find>edit</find>
+      <find>char_settings</find>
+      <find>blueprintClass</find>
+      <find>blueprintName</find>
+      <find>blueprintInstance</find>
+      <find>blueprintType</find>
+      <find>parentChildPairs</find>
+      <find>createBlueprint</find>
+      <find>show_bp_settings_ui</find>
+      <find>create_bp_ui</find>
+      <find>create_character</find>
+      <find>bp_dlg</find>
+      <find>appendUI</find>
+      <find>create_bp_dialog</find>
+      <find>dlg_name</find>
+      <find>get_bp_dialog_class</find>
+      <find>send_info</find>
+      <find>setBlueprintParent</find>
+      <find>editBlueprintSettingsUI</find>
+      <find>bp_modules</find>
     </findStrings>
     <replaceStrings>
-      <replace>char_settings</replace>
       <replace>qt_handlers.</replace>
       <replace>qt_handlers.qGridLayout()</replace>
       <replace>list_item</replace>
@@ -148,6 +134,17 @@
       <replace>ctrl_pos</replace>
       <replace>RootBlueprint</replace>
       <replace>ch_links_grp</replace>
+      <replace>bp_class</replace>
+      <replace>bp_name</replace>
+      <replace>bp_new</replace>
+      <replace>bp_t</replace>
+      <replace>build_skeleton</replace>
+      <replace>create_blueprint</replace>
+      <replace>dialog_class</replace>
+      <replace>open_char_dialog</replace>
+      <replace>append_ui</replace>
+      <replace>open_blueprint_dialog</replace>
+      <replace>send_data</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -163,15 +160,17 @@
         <option value="$PROJECT_DIR$/ui.py" />
         <option value="$PROJECT_DIR$/tool.py" />
         <option value="$PROJECT_DIR$/ui/char_settings.py" />
-        <option value="$PROJECT_DIR$/utils/libWidgets.py" />
         <option value="$PROJECT_DIR$/ui/blueprint_settings.py" />
-        <option value="$PROJECT_DIR$/tool_ui.py" />
         <option value="$PROJECT_DIR$/blueprints/root.py" />
         <option value="$PROJECT_DIR$/blueprints/character.py" />
         <option value="$PROJECT_DIR$/utils/libControllers.py" />
         <option value="$PROJECT_DIR$/blueprints/blueprint.py" />
-        <option value="$PROJECT_DIR$/tool_ui_dialogs.py" />
+        <option value="$PROJECT_DIR$/utils/libModules.py" />
+        <option value="$PROJECT_DIR$/tool_ui.py" />
         <option value="$PROJECT_DIR$/ui/character_dialog.py" />
+        <option value="$PROJECT_DIR$/ui/blueprint_dialog.py" />
+        <option value="$PROJECT_DIR$/utils/libWidgets.py" />
+        <option value="$PROJECT_DIR$/tool_ui_dialogs.py" />
       </list>
     </option>
   </component>
@@ -217,6 +216,11 @@
               <item name="bd_rig" type="462c0819:PsiDirectoryNode" />
               <item name="ui" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="bd_rig" type="b2602c69:ProjectViewProjectNode" />
+              <item name="bd_rig" type="462c0819:PsiDirectoryNode" />
+              <item name="utils" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -230,6 +234,7 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\bdiaconu\Documents\maya\scripts\bdScripts\bd_rig\ui" />
       <recent name="C:\Users\bdiaconu\Documents\maya\scripts\bdScripts\bd_rig" />
     </key>
   </component>
@@ -247,6 +252,9 @@
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
+  </component>
+  <component name="StructureViewFactory">
+    <option name="ACTIVE_ACTIONS" value=",SHOW_INHERITED" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -272,9 +280,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15405117" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15565032" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32899022" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maya Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -282,7 +289,7 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32899022" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.12260128" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32899022" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32995737" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -337,27 +344,10 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/blueprints/character.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/libControllers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="3" column="32" lean-forward="true" selection-start-line="3" selection-start-column="32" selection-end-line="3" selection-end-column="32" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/blueprints/blueprint.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1445">
           <caret line="88" column="46" lean-forward="false" selection-start-line="88" selection-start-column="46" selection-end-line="88" selection-end-column="46" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -366,7 +356,7 @@
         <state relative-caret-position="6137">
           <caret line="370" column="54" lean-forward="false" selection-start-line="370" selection-start-column="38" selection-end-line="370" selection-end-column="54" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -375,9 +365,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -393,9 +380,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
           <caret line="13" column="19" lean-forward="false" selection-start-line="13" selection-start-column="19" selection-end-line="13" selection-end-column="19" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -403,7 +387,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2295">
           <caret line="138" column="38" lean-forward="true" selection-start-line="138" selection-start-column="38" selection-end-line="138" selection-end-column="38" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -427,7 +410,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6290">
           <caret line="378" column="8" lean-forward="false" selection-start-line="378" selection-start-column="8" selection-end-line="378" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -436,7 +418,7 @@
         <state relative-caret-position="8993">
           <caret line="529" column="27" lean-forward="false" selection-start-line="529" selection-start-column="27" selection-end-line="529" selection-end-column="27" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -445,7 +427,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
           <caret line="20" column="25" lean-forward="false" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -462,7 +443,7 @@
         <state relative-caret-position="8840">
           <caret line="529" column="27" lean-forward="false" selection-start-line="529" selection-start-column="27" selection-end-line="529" selection-end-column="27" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -479,7 +460,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
           <caret line="20" column="25" lean-forward="false" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -488,7 +468,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -505,7 +485,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
           <caret line="20" column="25" lean-forward="false" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -514,7 +493,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -538,7 +517,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -555,7 +534,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -579,7 +558,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -596,7 +575,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -649,17 +628,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
           <caret line="13" column="19" lean-forward="false" selection-start-line="13" selection-start-column="19" selection-end-line="13" selection-end-column="19" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ui/blueprint_settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1462">
-          <caret line="86" column="25" lean-forward="false" selection-start-line="86" selection-start-column="6" selection-end-line="86" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -667,9 +635,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -677,7 +642,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6290">
           <caret line="378" column="8" lean-forward="false" selection-start-line="378" selection-start-column="8" selection-end-line="378" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -693,33 +657,40 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-181">
           <caret line="88" column="46" lean-forward="false" selection-start-line="88" selection-start-column="46" selection-end-line="88" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/blueprints/character.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/libModules.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="6" column="8" lean-forward="true" selection-start-line="6" selection-start-column="8" selection-end-line="6" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/blueprint_settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="862">
+          <caret line="86" column="25" lean-forward="false" selection-start-line="86" selection-start-column="6" selection-end-line="86" selection-end-column="25" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tool_ui.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="117" column="19" lean-forward="false" selection-start-line="117" selection-start-column="8" selection-end-line="117" selection-end-column="19" />
+        <state relative-caret-position="374">
+          <caret line="355" column="0" lean-forward="false" selection-start-line="355" selection-start-column="0" selection-end-line="357" selection-end-column="53" />
           <folding>
-            <element signature="e#0#27#0" expanded="true" />
+            <element signature="e#0#27#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/libWidgets.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="0" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ui/character_dialog.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="635">
-          <caret line="55" column="45" lean-forward="true" selection-start-line="55" selection-start-column="45" selection-end-line="55" selection-end-column="45" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -731,18 +702,34 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/blueprints/character.py">
+    <entry file="file://$PROJECT_DIR$/ui/character_dialog.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-51">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state relative-caret-position="431">
+          <caret line="94" column="0" lean-forward="false" selection-start-line="94" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ui/blueprint_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="363">
+          <caret line="101" column="24" lean-forward="true" selection-start-line="101" selection-start-column="24" selection-end-line="101" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/libWidgets.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="496">
+          <caret line="132" column="32" lean-forward="true" selection-start-line="132" selection-start-column="18" selection-end-line="132" selection-end-column="32" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tool_ui_dialogs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="580">
-          <caret line="242" column="49" lean-forward="true" selection-start-line="242" selection-start-column="49" selection-end-line="242" selection-end-column="49" />
+        <state relative-caret-position="394">
+          <caret line="247" column="33" lean-forward="false" selection-start-line="247" selection-start-column="33" selection-end-line="247" selection-end-column="33" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
           </folding>

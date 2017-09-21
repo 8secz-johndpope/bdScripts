@@ -3,18 +3,18 @@ import pymel.core as pm
 import os
 import inspect
 import traceback
-import ui.char_settings as char_settings
 import ui.blueprint_settings as blueprint_settings
 import blueprints.character as char
 import mRigGlobals as MRIGLOBALS
 from utils import libWidgets as UI
 import ui.character_dialog as char_dlg
+import ui.blueprint_dialog as bp_dlg
 
 reload(MRIGLOBALS)
 reload(char)
 reload(blueprint_settings)
-reload(char_settings)
 reload(char_dlg)
+reload(bp_dlg)
 reload(UI)
 
 try:
@@ -33,6 +33,12 @@ mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget)
 
 
 rigWin = 'mRigWindow'
+dlg_name = 'BlueprintDlg'
+
+
+class Communicate(QObject):
+    char_signal = Signal(dict)
+    bp_signal = Signal(object)
 
 
 class ToolWindow(QMainWindow):
@@ -42,21 +48,18 @@ class ToolWindow(QMainWindow):
         self.setWindowFlags(Qt.Window)
         self.setObjectName(rigWin)
         self.setWindowTitle('Modular Rigging Tool')
-        """Class members:
-        self.bp_modules - dict holding the python modules where the blueprints are implemented. The key is the blueprint name, the value is the python module pointer
-        self.character - active character
-        """
+
+        self.signals = Communicate()
+        self.signals.char_signal.connect(self.create_character)
+        self.signals.bp_signal.connect(self.create_blueprint)
+        self.character = None
         self.bp_modules = {}
         self.bp_modules_ui = []
-        self.character = None
         self.bp_parent = ''
         self.bp_settings_ui = None
-        self.char_name = None
-        self.char_name_suffix = None
-        self.char_settings = None
         # # ------------------------- UI elements -------------------------
-
         self.char_widget = QWidget()
+        self.char_name = None
         self.bp_widget = QWidget()
         self.skeleton_widget = QWidget()
         self.rig_widget = QWidget()
@@ -118,9 +121,9 @@ class ToolWindow(QMainWindow):
 
         # self.char_settings = char_settings.CharSettingsWidget()
         # name_layout = UI.HorBox()
-        # self.char_name = UI.LabelEditWidget(label='Character name:', label_size=85, edit_size=80)
-        # self.char_name_suffix = UI.LabelEditWidget(label='+', label_size=10, edit_size=40)
-        # self.char_name_suffix.edit.setText('_' + MRIGLOBALS.CHAR)
+        self.char_name = UI.LabelEditWidget(label='Character name:', label_size=85)
+        self.char_name.edit.setReadOnly(1)
+        self.char_name.hide()
         #
         # name_layout.addWidget(self.char_name)
         # name_layout.addWidget(self.char_name_suffix)
@@ -138,12 +141,13 @@ class ToolWindow(QMainWindow):
         # char_box.layout.addWidget(self.char_settings)
         # char_box.layout.addWidget(title)
         # char_box.layout.addLayout(name_layout)
+        char_box.layout.addWidget(self.char_name)
         char_box.layout.addWidget(separator)
         char_box.layout.addLayout(btn_layout)
 
         char_layout.addWidget(char_box)
 
-        new_char_btn.clicked.connect(self.create_character)
+        new_char_btn.clicked.connect(self.open_char_dialog)
 
         self.char_widget.setLayout(char_layout)
 
@@ -167,7 +171,7 @@ class ToolWindow(QMainWindow):
                 if blueprints_list[i] != 'blueprint':  # we dont need to create an UI for the blueprint base class
                     python_module = self.import_python_module(blueprints_list[i])
                     if python_module:
-                        module_ui = self.create_bp_ui(modName=python_module.BLUEPRINT_TYPE, index=i)
+                        module_ui = self.create_bp_ui(mod_name=python_module.BLUEPRINT_TYPE, index=i)
                         self.bp_modules_ui.append(module_ui)
 
         for i, m in enumerate(self.bp_modules_ui):
@@ -195,7 +199,7 @@ class ToolWindow(QMainWindow):
         self.bp_widget.setLayout(blueprints_layout)
 
         edit_bp_btn.released.connect(self.editSelectedBlueprint)
-        self.bp_list.doubleClicked.connect(self.deselectBlueprint)
+        self.bp_list.doubleClicked.connect(self.deselect_bp)
 
     def add_skeleton_ui(self):
         layout = UI.VertBox()
@@ -205,7 +209,7 @@ class ToolWindow(QMainWindow):
         skeleton_box.layout.addWidget(create_skeleton_btn)
 
         layout.addWidget(skeleton_box)
-        create_skeleton_btn.clicked.connect(self.buildSkeleton)
+        create_skeleton_btn.clicked.connect(self.build_skeleton)
         self.skeleton_widget.setLayout(layout)
 
     def add_rigging_ui(self):
@@ -220,27 +224,33 @@ class ToolWindow(QMainWindow):
 
         # --------------------------------------------------------------------------------------------------------------
 
-    def create_character(self):
+    def open_char_dialog(self):
         """
         Clicked event for self.char_settings.createCharBtn
         Creates a new character
         """
-        pm.undoInfo(openChunk=True)
-        char_dialog = char_dlg.CharSettingsDialog(parent=self)
-        result = char_dialog.exec_()
-        if result == QDialog.Accepted:
-            char_name, char_suffix = char_dialog.get_name()
-            left_str, right_str = char_dialog.get_mirror_strings()
+        char_dialog = char_dlg.CharSettingsDialog(parent=self, signal=self.signals)
+        char_dialog.show()
 
-            if len(char_name) and len(char_suffix):
-                char_name = char_name + char_suffix
-                self.character = char.Char(name=char_name, leftString=left_str, rightString=right_str)
-                self.character.create()
-                self.info_dock.infoDisplay.append('Created %s character' % char_name)
-                # list_item = QListWidgetItem()
-                # list_item.setText(self.character.chRootName)
-                # list_item.setTextAlignment(Qt.AlignHCenter)
-                # self.bp_list.addItem(list_item)
+    @Slot(dict)
+    def create_character(self, info):
+        pm.undoInfo(openChunk=True)
+        char_name = info['name']
+        char_suffix = info['suffix']
+        left_str = info['left']
+        right_str = info['right']
+
+        if len(char_name) and len(char_suffix):
+            char_name = char_name + char_suffix
+            self.character = char.Char(name=char_name, leftString=left_str, rightString=right_str)
+            self.character.create()
+            self.char_name.edit.setText(char_name)
+            self.char_name.show()
+            self.info_dock.infoDisplay.append('Created %s character' % char_name)
+            # list_item = QListWidgetItem()
+            # list_item.setText(self.character.chRootName)
+            # list_item.setTextAlignment(Qt.AlignHCenter)
+            # self.bp_list.addItem(list_item)
 
         pm.undoInfo(closeChunk=True)
 
@@ -260,20 +270,20 @@ class ToolWindow(QMainWindow):
                 list_item.setText(self.character.chBlueprintsList[i].bpName)
                 self.bp_list.addItem(list_item)
 
-    def import_python_module(self, blueprintName):
+    def import_python_module(self, bp_name):
         """
         Returns a Python Module
 
         Arguments:
-        blueprintName - a string containing the name of the blueprint file without the extension
+        bp_name - a string containing the name of the blueprint file without the extension
         """
         top_package = __name__.split('.')[0]
-        module_to_import = top_package + '.bd_rig.blueprints.' + blueprintName
+        module_to_import = top_package + '.bd_rig.blueprints.' + bp_name
         # print('------------------>' + module_to_import)
         mod = None
 
         try:
-            mod = __import__(module_to_import, {}, {}, [blueprintName])
+            mod = __import__(module_to_import, {}, {}, [bp_name])
             reload(mod)
             self.bp_modules[mod.BLUEPRINT_TYPE] = mod
             print ('Imported blueprint module %s' % module_to_import)
@@ -282,7 +292,7 @@ class ToolWindow(QMainWindow):
             pm.warning(traceback.format_exc())
         return mod
 
-    def create_bp_ui(self, modName, index):
+    def create_bp_ui(self, mod_name, index):
         """
         Implement a desired UI for the blueprint , currently it's just a button
 
@@ -292,14 +302,12 @@ class ToolWindow(QMainWindow):
         Return:
         the ui/widget for the blueprint module
         """
-        # self.getSettingsClass(modName)
-        btn = UI.BlueprintButton(modName, index)
-        # color = btn.palette().color(QtGui.QPalette.Background)
-        btn.clicked.connect(self.show_bp_settings_ui)
+        btn = UI.BlueprintButton(mod_name, index)
+        btn.clicked.connect(self.open_blueprint_dialog)
         return btn
 
     # --------------------------------------------Buttons callbacks ------------------------------------------#
-    def show_bp_settings_ui(self):
+    def open_blueprint_dialog(self):
         """
         Creates or toggles the clicked blueprint creation UI. This will happen ONLY if a character was created
 
@@ -309,97 +317,81 @@ class ToolWindow(QMainWindow):
         if self.character:
             blueprint = str(self.sender().text())
 
-            # if you press the same button, ui visibility is toggled
-            if self.bp_settings_ui:
-                bp_type = self.bp_settings_ui.getType()
-                if bp_type == blueprint:
-                    if self.bp_settings_ui.isVisible():
-                        self.bp_settings_ui.hide()
-                    else:
-                        self.bp_settings_ui.show()
-                        self.bp_settings_ui.bp_name.edit.setText(blueprint.capitalize())
-                        self.bp_settings_ui.bp_name.edit.setFocus()
-                    return
-
-            # delete the settings when a a new blueprint btn is pressed
-            if self.bp_settings_ui is not None:
-                self.bp_settings_ui.deleteLater()
             # create the blueprints creation/edit settings UI
-            settingsClass = self.getSettingsClass(blueprint)
-            self.bp_settings_ui = settingsClass(blueprintType=blueprint)  # blueprint_settings.BlueprintSettingsWidget(bp_type=blueprint)
-            self.bp_settings_ui.bp_name.edit.setText(blueprint.capitalize())
-            self.bp_settings_ui.bp_name.edit.setFocus()
-            selection = pm.ls(sl=1)
-            if selection and '_guide' in selection[0].name():
-                self.bp_settings_ui.bp_parent.edit.setText(selection[0].name())
-            # else:
-            #     self.bp_settings_ui.bp_parent.edit.setText(
-            #         self.character.chBlueprintsList[0].bpGuidesList[0].name())
+            if pm.window(dlg_name, exists=True, q=True):
+                pm.deleteUI(dlg_name)
 
-            self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
+            dialog_class = self.get_bp_dialog_class(blueprint)
+            bp_dialog = dialog_class(parent=self, category=blueprint, signal=self.signals)
+            bp_dialog.show()
 
-            self.bp_settings_ui.create_bp_btn.clicked.connect(self.createBlueprint)
-            self.bp_settings_ui.bp_parent.pickBtn.clicked.connect(self.setBlueprintParent)
-
+        #     self.bp_settings_ui = dialog_class(blueprintType=blueprint)  # blueprint_settings.BlueprintSettingsWidget(bp_type=blueprint)
+        #     self.bp_settings_ui.bp_name.edit.setText(blueprint.capitalize())
+        #     self.bp_settings_ui.bp_name.edit.setFocus()
+        #     selection = pm.ls(sl=1)
+        #     if selection and '_guide' in selection[0].name():
+        #         self.bp_settings_ui.bp_parent.edit.setText(selection[0].name())
+        #     # else:
+        #     #     self.bp_settings_ui.bp_parent.edit.setText(
+        #     #         self.character.chBlueprintsList[0].bpGuidesList[0].name())
+        #
+        #     self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
+        #
+        #     self.bp_settings_ui.create_bp_btn.clicked.connect(self.create_blueprint)
+        #     self.bp_settings_ui.bp_parent.pickBtn.clicked.connect(self.setBlueprintParent)
+        #
         else:
             pm.warning('No character created !!!')
             self.info_dock.infoDisplay.append('No character created !!!')
-            self.sender().backColorAnim.start()
-            self.char_name.backColorAnim.start()
-            self.tabs.setCurrentIndex(0)
-            self.char_name.edit.setFocus()
+        #     self.sender().backColorAnim.start()
+        #     self.char_name.backColorAnim.start()
+        #     self.tabs.setCurrentIndex(0)
+        #     self.char_name.edit.setFocus()
 
-    def createBlueprint(self):
+    @Slot(dict)
+    def create_blueprint(self, info):
         """
         Clicked slot from self.bp_settings_ui.create_bp_btn
-
         It will create the blueprint in Maya
         """
         pm.undoInfo(openChunk=True)
-        blueprintName = self.bp_settings_ui.bp_name.edit.text()
-        bp_parent = self.bp_settings_ui.bp_parent.edit.text()
-        blueprintInfo = self.bp_settings_ui.getInfo()
+        bp_name = info['name']
+        bp_parent = info['parent']
+        bp_type = info['type']
+        bp_info = info
 
-        if blueprintName != '':
-            mod = self.bp_modules[self.bp_settings_ui.bp_type]
-            # reload(mod)
+        if bp_name != '':
+            mod = self.bp_modules[bp_type]
 
-            blueprintClass = getattr(mod, mod.CLASS_NAME)
-            if blueprintClass:
-                if not self.character.hasBlueprint(blueprintName):
-                    blueprintInstance = blueprintClass(name=blueprintName, parent=bp_parent,
-                                                       buildInfo=blueprintInfo, character=self.character)
-                    blueprintInstance.create()
-                    blueprintInstance.createParentLink()
-                    self.character.addBlueprint(blueprintInstance)
+            bp_class = getattr(mod, mod.CLASS_NAME)
+            if bp_class:
+                if not self.character.hasBlueprint(bp_name):
+                    bp_new = bp_class(name=bp_name, parent=bp_parent, buildInfo=bp_info, character=self.character)
+                    bp_new.create()
+                    bp_new.createParentLink()
+                    self.character.addBlueprint(bp_new)
                     self.character.saveCharacterInfo()
-                    self.bp_list.addItem(blueprintInstance.bpName)
+                    self.bp_list.addItem(bp_new.bpName)
                     self.info_dock.infoDisplay.append(
-                        'Blueprint \'%s\' of type %s created !' % (blueprintName, self.bp_settings_ui.bp_type))
-                    pm.select(blueprintInstance.bpController)
-                    for i in range(len(self.bp_modules_ui)):
-                        self.bp_modules_ui[i].show()
-                        self.bp_settings_ui.hide()
+                        'Blueprint \'%s\' of type %s created !' % (bp_name, bp_type))
+                    pm.select(bp_new.bpController)
                 else:
                     self.info_dock.infoDisplay.append(
-                        'Blueprint with the name \'%s\' already exists, choose a new name !!!' % blueprintName)
-                    pm.warning('Blueprint with the name \'%s\' already exists, choose a new name !!!' % blueprintName)
+                        'Blueprint with the name \'%s\' already exists, choose a new name !!!' % bp_name)
+                    pm.warning('Blueprint with the name \'%s\' already exists, choose a new name !!!' % bp_name)
             else:
                 self.info_dock.infoDisplay.append('Found no blueprint class in module %s!!!' % mod)
                 pm.warning('Found no blueprint class in module %s!!!' % mod)
-
-
                 # self.bp_settings_ui.bp_name.edit.setText("")
-
         else:
             self.info_dock.infoDisplay.append('Enter a name for the blueprint !')
             print('Enter a name for the blueprint !')
         pm.undoInfo(closeChunk=True)
 
-    def deselectBlueprint(self):
+    def deselect_bp(self):
         self.bp_list.clearSelection()
 
-    def buildSkeleton(self):
+    def build_skeleton(self):
         pm.undoInfo(openChunk=True)
         parentChildPairs = {}
         for blueprint in self.character.chBlueprintsList:
@@ -430,57 +422,6 @@ class ToolWindow(QMainWindow):
                 pm.parent(child, parent)
         pm.undoInfo(closeChunk=True)
 
-    def setBlueprintParent(self):
-        selection = pm.ls(sl=1)
-        # if selection:
-        #     if 'guide' not in selection[0].name():
-        #         pm.warning('Please select a guide to be used as a parent')
-        #         self.info_dock.infoDisplay.append('Please select a guide to be used as a parent')
-        #     else:
-        #         self.bp_settings_ui.bp_parent.edit.setText(selection[0].name())
-        self.bp_settings_ui.bp_parent.edit.setText(selection[0].name())
-
-    def editBlueprintSettingsUI(self, blueprint):
-        """
-        Shows the settings UI for the selected bp for editing.
-
-        """
-        if self.character:
-            bpType = blueprint.bpType
-            # if you press the same button, ui visibility is toggled
-            if self.bp_settings_ui:
-                bp_type = self.bp_settings_ui.getType()
-                if bp_type == type:
-                    if self.bp_settings_ui.isVisible():
-                        self.bp_settings_ui.hide()
-                    else:
-                        self.bp_settings_ui.show()
-                        self.bp_settings_ui.bp_name.edit.setText(blueprint.bpName)
-                        self.bp_settings_ui.bp_name.edit.setFocus()
-                    return
-
-            # delete the settings when a a new blueprint btn is pressed
-            if self.bp_settings_ui is not None:
-                self.bp_settings_ui.deleteLater()
-
-            # create the blueprints creation/edit settings UI
-            settingsClass = self.getSettingsClass(bpType)
-            self.bp_settings_ui = settingsClass(bpType)
-            self.bp_settings_ui.bp_name.edit.setText(blueprint.bpName)
-            self.bp_settings_ui.bp_name.edit.setFocus()
-
-            self.bp_settings_ui.bp_parent.edit.setText(str(blueprint.bpParent))
-            self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
-            self.bp_settings_ui.create_bp_btn.clicked.connect(self.createBlueprint)
-            self.bp_settings_ui.bp_parent.pickBtn.clicked.connect(self.setBlueprintParent)
-        else:
-            pm.warning('No character created !!!')
-            self.info_dock.infoDisplay.append('No character created !!!')
-            self.sender().backColorAnim.start()
-            self.char_name.backColorAnim.start()
-            self.tabs.setCurrentIndex(0)
-            self.char_name.edit.setFocus()
-
     def editSelectedBlueprint(self):
         selectedBlueprintIndex = self.bp_list.currentRow()
         if selectedBlueprintIndex > 0:
@@ -503,14 +444,13 @@ class ToolWindow(QMainWindow):
             blueprint_files = [os.path.splitext(bp_file)[0] for bp_file in os.listdir(blueprints_folder) if
                                bp_file.endswith('.py') and '__init__' not in bp_file and 'character' not in bp_file]
             if len(blueprint_files):
-                # blueprint_files.remove('blueprint')
                 return blueprint_files
             else:
                 return None
 
     @staticmethod
-    def getSettingsClass(bp_type):
-        blueprintClass = None
+    def get_settings_class(bp_type):
+        bp_class = None
         print inspect.getmembers(blueprint_settings, inspect.isclass)
         classes = [m[1] for m in inspect.getmembers(blueprint_settings, inspect.isclass)
                    if m[1].__module__ == blueprint_settings.__name__]
@@ -520,9 +460,25 @@ class ToolWindow(QMainWindow):
             if cl.TYPE == bp_type:
                 return cl
             elif cl.TYPE == 'blueprint':
-                blueprintClass = cl
+                bp_class = cl
 
-        return blueprintClass
+        return bp_class
+
+    @staticmethod
+    def get_bp_dialog_class(bp_type):
+        bp_class = None
+        print inspect.getmembers(bp_dlg, inspect.isclass)
+        classes = [m[1] for m in inspect.getmembers(bp_dlg, inspect.isclass)
+                   if m[1].__module__ == bp_dlg.__name__]
+
+        for cl in classes:
+            print cl
+            if cl.TYPE == bp_type:
+                return cl
+            elif cl.TYPE == 'blueprint':
+                bp_class = cl
+
+        return bp_class
 
 
 def create():

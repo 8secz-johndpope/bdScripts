@@ -15,7 +15,7 @@ reload(MRIGLOBALS)
 
 
 class CharSettingsDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, signal=None):
         super(CharSettingsDialog, self).__init__()
         self.setParent(parent)
         self.setWindowFlags(Qt.Dialog)
@@ -26,6 +26,8 @@ class CharSettingsDialog(QDialog):
         self.right_str = None
         self.name_edit = None
         self.suffix_edit = None
+        self.signal = signal.char_signal
+        print self.signal
         # self.root_name = None
 
         self.setup_ui()
@@ -56,7 +58,7 @@ class CharSettingsDialog(QDialog):
         separator3 = UI.Separator()
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel,Qt.Horizontal, self)
-        buttons.accepted.connect(self.accept)
+        buttons.accepted.connect(self.send_data)
         buttons.rejected.connect(self.reject)
 
         # self.root_name = UI.LabelEditWidget(label='Root Name')
@@ -80,10 +82,18 @@ class CharSettingsDialog(QDialog):
 
         self.setLayout(main_layout)
 
-    def get_name(self):
-        return self.name_edit.edit.text(), self.suffix_edit.edit.text()
+    def get_info(self):
+        info = dict()
+        info['name'] = self.name_edit.edit.text()
+        info['suffix'] = self.suffix_edit.edit.text()
+        info['left'] = self.left_str.edit.text()
+        info['right'] = self.right_str.edit.text()
 
-    def get_mirror_strings(self):
-        return self.left_str.edit.text(), self.right_str.edit.text()
+        return info
+
+    def send_data(self):
+        self.signal.emit(self.get_info())
+        super(CharSettingsDialog, self).accept()
+
 
 
