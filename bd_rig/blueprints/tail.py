@@ -14,33 +14,33 @@ class TailBlueprint(BPMAIN.Blueprint):
     def __init__(self, *args, **kargs):
         print 'Tail Blueprint'
         super(TailBlueprint, self).__init__(*args, **kargs)
-        self.bpType = BLUEPRINT_TYPE
+        self.type_bp = BLUEPRINT_TYPE
 
-        self.bpInfo = kargs.setdefault('buildInfo', {})
+        self.info = kargs.setdefault('buildInfo', {})
 
         self.tailNumJnt = 5
 
-        self.bpGuidesPos = {}
+        self.guide_pos = {}
 
-        self.parseInfo()
+        self.parse_info()
         self.buildGuidesInfo()
-        # self.bpGuidesPos = {0:{'pos':[0.0,0.0,0.0]},1:{'pos':[-20.0,0.0,0]},2:{'pos':[-40.0,0.0,0]}}
+        # self.guide_pos = {0:{'pos':[0.0,0.0,0.0]},1:{'pos':[-20.0,0.0,0]},2:{'pos':[-40.0,0.0,0]}}
 
-    def parseInfo(self):
-        super(TailBlueprint, self).parseInfo()
-        for info, val in self.bpInfo.iteritems():
+    def parse_info(self):
+        super(TailBlueprint, self).parse_info()
+        for info, val in self.info.iteritems():
             if info == 'spineNumJnt':
                 self.tailNumJnt = val
 
     def buildGuidesInfo(self):
-        parent = pm.ls(self.bpParent)[0]
+        parent = pm.ls(self.parent)[0]
         parentPos = parent.getTranslation(space='world')
 
-        segmentLength = 1.0 * self.bpLength / (self.tailNumJnt - 1)
+        segmentLength = 1.0 * self.length / (self.tailNumJnt - 1)
 
         for i in range(self.tailNumJnt):
-            pos = [parentPos[0], parentPos[1], parentPos[2] + -1 * (self.bpLength + segmentLength * i)]
-            self.bpGuidesPos[i] = {'pos': pos}
+            pos = [parentPos[0], parentPos[1], parentPos[2] + -1 * (self.length + segmentLength * i)]
+            self.guide_pos[i] = {'pos': pos}
 
     def create(self):
         super(TailBlueprint, self).create()

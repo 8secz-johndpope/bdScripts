@@ -14,30 +14,33 @@ class SpineBlueprint(BPMAIN.Blueprint):
     def __init__(self, *args, **kargs):
         print 'Spine Blueprint'
         super(SpineBlueprint, self).__init__(*args, **kargs)
-        self.bpType = BLUEPRINT_TYPE
+        self.type_bp = BLUEPRINT_TYPE
 
-        self.bpInfo = kargs.setdefault('buildInfo', {})
+        self.info = kargs.setdefault('buildInfo', {})
 
         self.spineNumJnt = 0
 
-        self.bpGuidesPos = {}
+        # self.guide_pos = {}
 
-        self.parseInfo()
+        self.parse_info()
         self.buildGuidesInfo()
+        print self.guide_pos
 
-    def parseInfo(self):
-        super(SpineBlueprint, self).parseInfo()
-        for info, val in self.bpInfo.iteritems():
-            if info == 'spineNumJnt':
+
+    def parse_info(self):
+        super(SpineBlueprint, self).parse_info()
+        for info, val in self.info.iteritems():
+            if info == 'num_jnt':
                 self.spineNumJnt = val
 
     def buildGuidesInfo(self):
-        segmentLength = 1.0 * self.bpLength / (self.spineNumJnt - 1)
+        segmentLength = 1.0 * self.length / (self.spineNumJnt - 1)
         print segmentLength
 
         for i in range(self.spineNumJnt):
-            pos = [0.0, self.bpLength + segmentLength * i, 0.0]
-            self.bpGuidesPos[i] = {'pos': pos}
+            pos = [0.0, self.length + segmentLength * i, 0.0]
+            self.guide_pos[i] = {'pos': pos}
+
 
     def create(self):
         super(SpineBlueprint, self).create()

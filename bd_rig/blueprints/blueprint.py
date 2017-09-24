@@ -1,20 +1,12 @@
 import pymel.core as pm
 import json
-
 from ..utils import libWidgets as UI
-
-reload(UI)
-
 from ..utils import libUtils as utils
-
-reload(utils)
-
 from ..utils import libControllers as CTRL
-
-reload(CTRL)
-
 from .. import mRigGlobals as MRIGLOBALS
-
+reload(UI)
+reload(utils)
+reload(CTRL)
 reload(MRIGLOBALS)
 
 # ------- Global suffixes ------
@@ -23,106 +15,105 @@ BPGUIDESGRP = MRIGLOBALS.BPGUIDESGRP
 BPCTRL = MRIGLOBALS.BPCTRL
 BPGUIDE = MRIGLOBALS.BPGUIDE
 BLUEPRINT_TYPE = 'blueprint'
-
-
 # ------------------------------
+
 
 class Blueprint(object):
     def __init__(self, *args, **kargs):
         # ----------------------------
-        self.bpTopGrp = ''
-        self.bpGuidesGrp = ''
-        self.bpGuidesList = []
-        self.bpController = ''
+        self.top_grp = ''
+        self.guides_grp = ''
+        self.guides_list = []
+        self.controller = ''
         # -----------------------------
-        self.bpName = kargs.setdefault('name', '')
-        self.bpCharacter = kargs.setdefault('character', None)
-        self.bpParent = kargs.setdefault('parent', '')
-        self.bpCtrlShape = kargs.setdefault('ctrlShape', 'box')
-        self.bpSide = kargs.setdefault('side', '')
-        self.bpMirror = kargs.setdefault('mirror', 1)
-        self.bpType = ''
+        self.name = kargs.setdefault('name', '')
+        self.character = kargs.setdefault('character', None)
+        self.parent = kargs.setdefault('parent', '')
+        self.ctrl_shape = kargs.setdefault('ctrlShape', 'box')
+        self.side = kargs.setdefault('side', '')
+        self.mirror = kargs.setdefault('mirror', 1)
+        self.type_bp = ''
         # -------------------------------------------
-        self.bpGuideSize = kargs.setdefault('guideSize', 1)
-        self.bpGuidesPos = {}
+        self.guide_size = kargs.setdefault('guideSize', 1)
+        self.guide_pos = {}
         # -------------------------------------------
-        self.bpInfo = kargs.setdefault('buildInfo', {})
-        self.bpLength = 100
+        self.info = kargs.setdefault('buildInfo', {})
+        self.length = 100
 
     def create(self):
-        self.createGroups()
-        self.createController()
-        self.createGuides()
-        self.addAttributes()
-        self.saveBlueprintInfo()
+        self.create_groups()
+        self.create_guides()
+        self.create_ctrl()
+        self.add_attributes()
+        self.save_bp_info()
         pm.select(cl=1)
 
-    def createGroups(self):
+    def create_groups(self):
         pm.select(cl=1)
-        self.bpTopGrp = self.bpName + '_' + BPGRP
-        pm.group(name=self.bpTopGrp)
-        pm.select(cl=1)
-
-        self.bpGuidesGrp = self.bpName + '_' + BPGUIDESGRP
-        pm.group(name=self.bpGuidesGrp)
+        self.top_grp = self.name + '_' + BPGRP
+        pm.group(name=self.top_grp)
         pm.select(cl=1)
 
-        pm.parent(self.bpGuidesGrp, self.bpTopGrp)
+        self.guides_grp = self.name + '_' + BPGUIDESGRP
+        pm.group(name=self.guides_grp)
+        pm.select(cl=1)
 
-    def createController(self):
-        ctrl_pos = self.bpGuidesPos[0]['pos']
-        self.bpController = self.bpName + '_' + BPCTRL
-        self.bpController = self.bpName + '_' + BPCTRL
-        new_ctrl = CTRL.Controller(name=self.bpController, scale=4, shape=self.bpCtrlShape, pos=ctrl_pos)
+        pm.parent(self.guides_grp, self.top_grp)
+
+    def create_ctrl(self):
+        ctrl_pos = self.guide_pos[0]['pos']
+        self.controller = self.name + '_' + BPCTRL
+        self.controller = self.name + '_' + BPCTRL
+        new_ctrl = CTRL.Controller(name=self.controller, scale=4, shape=self.ctrl_shape, pos=ctrl_pos)
         new_ctrl.buildController()
-        print "--------------------------------------", self.bpCtrlShape, "--------------------------------------"
-        ctrl_parent = pm.listRelatives(self.bpController, p=1, type='transform')[0]
+        print "--------------------------------------", self.ctrl_shape, "--------------------------------------"
+        ctrl_parent = pm.listRelatives(self.controller, p=1, type='transform')[0]
 
-        pm.parent(ctrl_parent, self.bpTopGrp)
-        pm.parent(self.bpGuidesGrp, self.bpController)
+        pm.parent(ctrl_parent, self.top_grp)
+        pm.parent(self.guides_grp, self.controller)
 
-    def createGuides(self):
+    def create_guides(self):
         # At the moment just plain joints
         i = 1
         prevGuide = ''
-        for index, data in self.bpGuidesPos.iteritems():
+        for index, data in self.guide_pos.iteritems():
             childClass = self.__class__.__name__
 
             if childClass == 'SingleBlueprint':
                 # if its the SingleBlueprint, the only guide needs no number count in its name
-                guideName = self.bpName + '_' + BPGUIDE
+                guideName = self.name + '_' + BPGUIDE
             else:
                 # for more guides, we name them based on the name of the blueprint and we number them
-                guideName = self.bpName + '_' + str(i).zfill(2) + '_' + BPGUIDE
+                guideName = self.name + '_' + str(i).zfill(2) + '_' + BPGUIDE
             guidePos = data['pos']
 
             # if index == 0:
-            # ctrl_parent = pm.listConnections('%s.parent'%self.bpController)[0]
+            # ctrl_parent = pm.listConnections('%s.parent'%self.controller)[0]
             # pm.xform(ctrl_parent,t=guidePos,ws=1)
             pm.select(cl=1)
 
             guide = pm.joint(name=guideName, p=guidePos)
-            guide.radius.set(self.bpGuideSize)
+            guide.radius.set(self.guide_size)
 
-            guideAxis = Axis(name=guideName + 'Axis', guide=guide)
-            guideAxis.createAxis()
-            pm.parent(guideAxis.axName, guide)
+            # guideAxis = Axis(name=guideName + 'Axis', guide=guide)
+            # guideAxis.createAxis()
+            # pm.parent(guideAxis.axName, guide)
             pm.select(cl=1)
-            pm.parent(guide, self.bpGuidesGrp)
-            self.bpGuidesList.append(guide)
+            pm.parent(guide, self.guides_grp)
+            self.guides_list.append(guide)
             if i > 1:
-                self.createLink(guide, prevGuide)
+                self.create_link(guide, prevGuide)
             prevGuide = guide
             i += 1
 
-    def addAttributes(self):
-        utils.addStringAttr(self.bpTopGrp, 'name', self.bpName)
-        utils.addStringAttr(self.bpTopGrp, 'type', self.bpType)
-        utils.addMessageAttr(self.bpTopGrp, self.bpParent, 'parent')
-        utils.addMessageAttr(self.bpTopGrp, self.bpController, BPCTRL)
-        utils.addMessageAttr(self.bpTopGrp, self.bpGuidesGrp, BPGUIDESGRP)
+    def add_attributes(self):
+        utils.addStringAttr(self.top_grp, 'name', self.name)
+        utils.addStringAttr(self.top_grp, 'type', self.type_bp)
+        utils.addMessageAttr(self.top_grp, self.parent, 'parent')
+        utils.addMessageAttr(self.top_grp, self.controller, BPCTRL)
+        utils.addMessageAttr(self.top_grp, self.guides_grp, BPGUIDESGRP)
 
-    def createLink(self, guide1, guide2):
+    def create_link(self, guide1, guide2):
         clusters = []
         guide1Pos = guide1.getTranslation(space='world')
         guide2Pos = guide2.getTranslation(space='world')
@@ -132,7 +123,7 @@ class Blueprint(object):
         for i in range(numCvs):
             linkCls = pm.cluster(linkCrv.name() + '.cv[' + str(i) + ']', name=linkCrv.name() + '_cls_' + str(i))[1]
             linkCls.visibility.set(0)
-            pm.parent(linkCls, self.bpTopGrp)
+            pm.parent(linkCls, self.top_grp)
             clusters.append(linkCls)
 
         pm.pointConstraint(guide1, clusters[0], mo=1)
@@ -140,15 +131,15 @@ class Blueprint(object):
         linkCrv.inheritsTransform.set(0)
         linkCrv.overrideEnabled.set(1)
         linkCrv.overrideDisplayType.set(1)
-        pm.parent(linkCrv, self.bpTopGrp)
+        pm.parent(linkCrv, self.top_grp)
 
-    def createParentLink(self):
+    def create_link_parent(self):
         clusters = []
-        bpParent = pm.ls(self.bpParent)[0]  # get the object
-        guide0 = self.bpGuidesList[0]
+        parent = pm.ls(self.parent)[0]  # get the object
+        guide0 = self.guides_list[0]
 
         guide1Pos = guide0.getTranslation(space='world')
-        guide2Pos = bpParent.getTranslation(space='world')
+        guide2Pos = parent.getTranslation(space='world')
 
         linkCrv = pm.curve(n=guide0 + '_bp_parent_link', d=1, p=[guide1Pos, guide2Pos])
         linkCrv.inheritsTransform.set(0)
@@ -160,52 +151,51 @@ class Blueprint(object):
         for i in range(numCvs):
             linkCls = pm.cluster(linkCrv.name() + '.cv[' + str(i) + ']', name=linkCrv.name() + '_cls_' + str(i))[1]
             linkCls.visibility.set(0)
-            pm.parent(linkCls, self.bpCharacter.ch_links_grp)
+            pm.parent(linkCls, self.character.ch_links_grp)
             clusters.append(linkCls)
 
         pm.pointConstraint(guide0, clusters[0], mo=1)
-        pm.pointConstraint(bpParent, clusters[1], mo=1)
+        pm.pointConstraint(parent, clusters[1], mo=1)
 
-        # skinCls = pm.skinCluster( tmp,[bpParent,guide0], tsb=1, ih=1, bindMethod = 0, maximumInfluences = 1, dropoffRate = 10.0 )
+        # skinCls = pm.skinCluster( tmp,[parent,guide0], tsb=1, ih=1, bindMethod = 0, maximumInfluences = 1, dropoffRate = 10.0 )
 
-        # pm.skinPercent(skinCls.name(),linkCrv+ '.cv[1]',tv=[(bpParent,1)])
+        # pm.skinPercent(skinCls.name(),linkCrv+ '.cv[1]',tv=[(parent,1)])
         # pm.skinPercent(skinCls.name(),linkCrv+ '.cv[0]',tv=[(guide0,1)])
 
-
-        pm.parent(linkCrv, self.bpCharacter.ch_links_grp)
+        pm.parent(linkCrv, self.character.ch_links_grp)
 
     def setParent(self, newParent):
-        self.bpParent = newParent
+        self.parent = newParent
 
-    def parseInfo(self):
-        for info, val in self.bpInfo.iteritems():
+    def parse_info(self):
+        for info, val in self.info.iteritems():
             if info == 'length':
-                self.bpLength = val
+                self.length = val
             elif info == 'guideSize':
-                self.bpGuideSize = val
+                self.guide_size = val
 
-    def saveBlueprintInfo(self):
-        self.bpInfo['topGrp'] = self.bpTopGrp
-        strInfo = json.dumps(self.bpInfo)
+    def save_bp_info(self):
+        self.info['topGrp'] = self.top_grp
+        strInfo = json.dumps(self.info)
 
-        if pm.attributeQuery('info', node=self.bpTopGrp, ex=1):
-            pm.setAttr(self.bpTopGrp + '.info', l=0)
-            pm.setAttr(self.bpTopGrp + '.info', str(strInfo), type='string')
-            pm.setAttr(self.bpTopGrp + '.info', l=1)
+        if pm.attributeQuery('info', node=self.top_grp, ex=1):
+            pm.setAttr(self.top_grp + '.info', l=0)
+            pm.setAttr(self.top_grp + '.info', str(strInfo), type='string')
+            pm.setAttr(self.top_grp + '.info', l=1)
         else:
-            utils.addStringAttr(self.bpTopGrp, 'info', strInfo)
+            utils.addStringAttr(self.top_grp, 'info', strInfo)
 
     def restore(self):
-        self.bpTopGrp = self.bpInfo['topGrp']
+        self.top_grp = self.info['topGrp']
 
-        messageAttr = self.bpTopGrp + '.' + BPCTRL
-        self.bpController = pm.listConnections('%s' % messageAttr)[0].name()
+        messageAttr = self.top_grp + '.' + BPCTRL
+        self.controller = pm.listConnections('%s' % messageAttr)[0].name()
 
-        messageAttr = self.bpTopGrp + '.' + BPGUIDESGRP
-        self.bpGuidesGrp = pm.listConnections('%s' % messageAttr)[0].name()
+        messageAttr = self.top_grp + '.' + BPGUIDESGRP
+        self.guides_grp = pm.listConnections('%s' % messageAttr)[0].name()
 
-        guides = pm.listRelatives(self.bpGuidesGrp)
-        self.bpGuidesList = [g for g in guides]
+        guides = pm.listRelatives(self.guides_grp)
+        self.guides_list = [g for g in guides]
 
         # self.chRootName = charRootGroup.attr('name').get()
 

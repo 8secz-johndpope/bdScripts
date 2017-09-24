@@ -277,11 +277,11 @@ class mRigUI(QtGui.QMainWindow):
             self.character.restoreBlueprints(self.blueprintModules)
             self.charName.edit.setText(charName.replace(('_' + char.CHAR), ''))
 
-            print [bp.bpName for bp in self.character.chBlueprintsList]
+            print [bp.name for bp in self.character.chBlueprintsList]
 
             for i in range(len(self.character.chBlueprintsList)):
                 listItem = QtGui.QListWidgetItem()
-                listItem.setText(self.character.chBlueprintsList[i].bpName)
+                listItem.setText(self.character.chBlueprintsList[i].name)
                 if i == 0:
                     listItem.setTextAlignment(QtCore.Qt.AlignHCenter)
                 self.bpCharList.addItem(listItem)
@@ -361,7 +361,7 @@ class mRigUI(QtGui.QMainWindow):
                 self.blueprintSettings.blueprintParent.edit.setText(selection[0].name())
             else:
                 self.blueprintSettings.blueprintParent.edit.setText(
-                    self.character.chBlueprintsList[0].bpGuidesList[0].name())
+                    self.character.chBlueprintsList[0].guides_list[0].name())
 
             self.blueprintsSettingsLayout.addWidget(self.blueprintSettings)
 
@@ -400,10 +400,10 @@ class mRigUI(QtGui.QMainWindow):
                     blueprintInstance.createParentLink()
                     self.character.addBlueprint(blueprintInstance)
                     self.character.saveCharacterInfo()
-                    self.bpCharList.addItem(blueprintInstance.bpName)
+                    self.bpCharList.addItem(blueprintInstance.name)
                     self.infoDock.infoDisplay.append(
                         'Blueprint \'%s\' of type %s created !' % (blueprintName, self.blueprintSettings.blueprintType))
-                    pm.select(blueprintInstance.bpController)
+                    pm.select(blueprintInstance.controller)
                     for i in range(len(self.blueprintModulesUIs)):
                         self.blueprintModulesUIs[i].show()
                         self.blueprintSettings.hide()
@@ -439,9 +439,9 @@ class mRigUI(QtGui.QMainWindow):
             jntList = []
             i = 1
             prevJnt = None
-            for guide in blueprint.bpGuidesList:
+            for guide in blueprint.guides_list:
                 guidePos = guide.getTranslation(space='world')
-                jnt = pm.joint(n=blueprint.bpSide + guide.name().replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT),
+                jnt = pm.joint(n=blueprint.side + guide.name().replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT),
                                p=guidePos)
                 if i > 1:
                     pm.joint(prevJnt, e=True, oj='xyz', secondaryAxisOrient='yup', zso=True)
@@ -452,7 +452,7 @@ class mRigUI(QtGui.QMainWindow):
             jntList[-1].jointOrientX.set(0)
             jntList[-1].jointOrientY.set(0)
             jntList[-1].jointOrientZ.set(0)
-            parentName = blueprint.bpParent.replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT)
+            parentName = blueprint.parent.replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT)
             parentChildPairs[parentName] = jntList[0]
 
         for parent, child in parentChildPairs.iteritems():
@@ -477,7 +477,7 @@ class mRigUI(QtGui.QMainWindow):
 
         """
         if self.character:
-            bpType = blueprint.bpType
+            type_bp = blueprint.type_bp
             # if you press the same button, ui visibility is toggled
             if self.blueprintSettings:
                 blueprintType = self.blueprintSettings.getType()
@@ -486,7 +486,7 @@ class mRigUI(QtGui.QMainWindow):
                         self.blueprintSettings.hide()
                     else:
                         self.blueprintSettings.show()
-                        self.blueprintSettings.blueprintName.edit.setText(blueprint.bpName)
+                        self.blueprintSettings.blueprintName.edit.setText(blueprint.name)
                         self.blueprintSettings.blueprintName.edit.setFocus()
                     return
 
@@ -495,13 +495,13 @@ class mRigUI(QtGui.QMainWindow):
                 self.blueprintSettings.deleteLater()
 
             # create the blueprints creation/edit settings UI
-            settingsClass = self.getSettingsClass(bpType)
+            settingsClass = self.getSettingsClass(type_bp)
             self.blueprintSettings = settingsClass(
-                blueprintType=bpType)  # blueprint_settings.BlueprintSettingsWidget(blueprintType=blueprint)
-            self.blueprintSettings.blueprintName.edit.setText(blueprint.bpName)
+                blueprintType=type_bp)  # blueprint_settings.BlueprintSettingsWidget(blueprintType=blueprint)
+            self.blueprintSettings.blueprintName.edit.setText(blueprint.name)
             self.blueprintSettings.blueprintName.edit.setFocus()
 
-            self.blueprintSettings.blueprintParent.edit.setText(str(blueprint.bpParent))
+            self.blueprintSettings.blueprintParent.edit.setText(str(blueprint.parent))
             self.blueprintsSettingsLayout.addWidget(self.blueprintSettings)
             self.blueprintSettings.createBlueprintBtn.clicked.connect(self.createBlueprint)
             self.blueprintSettings.blueprintParent.pickBtn.clicked.connect(self.setBlueprintParent)

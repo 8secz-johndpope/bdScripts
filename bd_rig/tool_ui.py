@@ -251,11 +251,11 @@ class ToolWindow(QMainWindow):
             self.character.restoreBlueprints(self.bp_modules)
             self.char_name.edit.setText(char_name.replace(('_' + char.CHAR), ''))
 
-            print [bp.bpName for bp in self.character.chBlueprintsList]
+            print [bp.name for bp in self.character.chBlueprintsList]
 
             for i in range(len(self.character.chBlueprintsList)):
                 list_item = QListWidgetItem()
-                list_item.setText(self.character.chBlueprintsList[i].bpName)
+                list_item.setText(self.character.chBlueprintsList[i].name)
                 self.bp_list.addItem(list_item)
 
     def import_python_module(self, blueprintName):
@@ -332,7 +332,7 @@ class ToolWindow(QMainWindow):
                 self.bp_settings_ui.bp_parent.edit.setText(selection[0].name())
             # else:
             #     self.bp_settings_ui.bp_parent.edit.setText(
-            #         self.character.chBlueprintsList[0].bpGuidesList[0].name())
+            #         self.character.chBlueprintsList[0].guides_list[0].name())
 
             self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
 
@@ -370,10 +370,10 @@ class ToolWindow(QMainWindow):
                     blueprintInstance.createParentLink()
                     self.character.addBlueprint(blueprintInstance)
                     self.character.saveCharacterInfo()
-                    self.bp_list.addItem(blueprintInstance.bpName)
+                    self.bp_list.addItem(blueprintInstance.name)
                     self.info_dock.infoDisplay.append(
                         'Blueprint \'%s\' of type %s created !' % (blueprintName, self.bp_settings_ui.bp_type))
-                    pm.select(blueprintInstance.bpController)
+                    pm.select(blueprintInstance.controller)
                     for i in range(len(self.bp_modules_ui)):
                         self.bp_modules_ui[i].show()
                         self.bp_settings_ui.hide()
@@ -404,9 +404,9 @@ class ToolWindow(QMainWindow):
             jntList = []
             i = 1
             prevJnt = None
-            for guide in blueprint.bpGuidesList:
+            for guide in blueprint.guides_list:
                 guidePos = guide.getTranslation(space='world')
-                jnt = pm.joint(n=blueprint.bpSide + guide.name().replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT),
+                jnt = pm.joint(n=blueprint.side + guide.name().replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT),
                                p=guidePos)
                 if i > 1:
                     pm.joint(prevJnt, e=True, oj='xyz', secondaryAxisOrient='yup', zso=True)
@@ -417,7 +417,7 @@ class ToolWindow(QMainWindow):
             jntList[-1].jointOrientX.set(0)
             jntList[-1].jointOrientY.set(0)
             jntList[-1].jointOrientZ.set(0)
-            parentName = blueprint.bpParent.replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT)
+            parentName = blueprint.parent.replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT)
             parentChildPairs[parentName] = jntList[0]
 
         for parent, child in parentChildPairs.iteritems():
@@ -443,7 +443,7 @@ class ToolWindow(QMainWindow):
 
         """
         if self.character:
-            bpType = blueprint.bpType
+            type_bp = blueprint.type_bp
             # if you press the same button, ui visibility is toggled
             if self.bp_settings_ui:
                 bp_type = self.bp_settings_ui.getType()
@@ -452,7 +452,7 @@ class ToolWindow(QMainWindow):
                         self.bp_settings_ui.hide()
                     else:
                         self.bp_settings_ui.show()
-                        self.bp_settings_ui.bp_name.edit.setText(blueprint.bpName)
+                        self.bp_settings_ui.bp_name.edit.setText(blueprint.name)
                         self.bp_settings_ui.bp_name.edit.setFocus()
                     return
 
@@ -461,12 +461,12 @@ class ToolWindow(QMainWindow):
                 self.bp_settings_ui.deleteLater()
 
             # create the blueprints creation/edit settings UI
-            settingsClass = self.getSettingsClass(bpType)
-            self.bp_settings_ui = settingsClass(bpType)
-            self.bp_settings_ui.bp_name.edit.setText(blueprint.bpName)
+            settingsClass = self.getSettingsClass(type_bp)
+            self.bp_settings_ui = settingsClass(type_bp)
+            self.bp_settings_ui.bp_name.edit.setText(blueprint.name)
             self.bp_settings_ui.bp_name.edit.setFocus()
 
-            self.bp_settings_ui.bp_parent.edit.setText(str(blueprint.bpParent))
+            self.bp_settings_ui.bp_parent.edit.setText(str(blueprint.parent))
             self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
             self.bp_settings_ui.create_bp_btn.clicked.connect(self.create_blueprint)
             self.bp_settings_ui.bp_parent.pickBtn.clicked.connect(self.setBlueprintParent)

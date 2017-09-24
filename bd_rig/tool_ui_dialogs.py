@@ -263,11 +263,11 @@ class ToolWindow(QMainWindow):
             self.character.restoreBlueprints(self.bp_modules)
             self.char_name.edit.setText(char_name.replace(('_' + char.CHAR), ''))
 
-            print [bp.bpName for bp in self.character.chBlueprintsList]
+            print [bp.name for bp in self.character.chBlueprintsList]
 
             for i in range(len(self.character.chBlueprintsList)):
                 list_item = QListWidgetItem()
-                list_item.setText(self.character.chBlueprintsList[i].bpName)
+                list_item.setText(self.character.chBlueprintsList[i].name)
                 self.bp_list.addItem(list_item)
 
     def import_python_module(self, bp_name):
@@ -325,7 +325,7 @@ class ToolWindow(QMainWindow):
             bp_dialog = dialog_class(parent=self, category=blueprint, signal=self.signals)
             bp_dialog.show()
 
-        #     self.bp_settings_ui = dialog_class(blueprintType=blueprint)  # blueprint_settings.BlueprintSettingsWidget(bp_type=blueprint)
+        #     self.bp_settings_ui = dialog_class(blueprintType=blueprint)  # blueprint_settings.BlueprintSettingsWidget(type_bp=blueprint)
         #     self.bp_settings_ui.bp_name.edit.setText(blueprint.capitalize())
         #     self.bp_settings_ui.bp_name.edit.setFocus()
         #     selection = pm.ls(sl=1)
@@ -333,7 +333,7 @@ class ToolWindow(QMainWindow):
         #         self.bp_settings_ui.bp_parent.edit.setText(selection[0].name())
         #     # else:
         #     #     self.bp_settings_ui.bp_parent.edit.setText(
-        #     #         self.character.chBlueprintsList[0].bpGuidesList[0].name())
+        #     #         self.character.chBlueprintsList[0].guides_list[0].name())
         #
         #     self.bp_settings_ui_layout.addWidget(self.bp_settings_ui)
         #
@@ -357,24 +357,24 @@ class ToolWindow(QMainWindow):
         pm.undoInfo(openChunk=True)
         bp_name = info['name']
         bp_parent = info['parent']
-        bp_type = info['type']
+        type_bp = info['type']
         bp_info = info
 
         if bp_name != '':
-            mod = self.bp_modules[bp_type]
+            mod = self.bp_modules[type_bp]
 
             bp_class = getattr(mod, mod.CLASS_NAME)
             if bp_class:
                 if not self.character.hasBlueprint(bp_name):
                     bp_new = bp_class(name=bp_name, parent=bp_parent, buildInfo=bp_info, character=self.character)
                     bp_new.create()
-                    bp_new.createParentLink()
+                    bp_new.create_link_parent()
                     self.character.addBlueprint(bp_new)
                     self.character.saveCharacterInfo()
-                    self.bp_list.addItem(bp_new.bpName)
+                    self.bp_list.addItem(bp_new.name)
                     self.info_dock.infoDisplay.append(
-                        'Blueprint \'%s\' of type %s created !' % (bp_name, bp_type))
-                    pm.select(bp_new.bpController)
+                        'Blueprint \'%s\' of type %s created !' % (bp_name, type_bp))
+                    pm.select(bp_new.controller)
                 else:
                     self.info_dock.infoDisplay.append(
                         'Blueprint with the name \'%s\' already exists, choose a new name !!!' % bp_name)
@@ -399,9 +399,9 @@ class ToolWindow(QMainWindow):
             jntList = []
             i = 1
             prevJnt = None
-            for guide in blueprint.bpGuidesList:
+            for guide in blueprint.guides_list:
                 guidePos = guide.getTranslation(space='world')
-                jnt = pm.joint(n=blueprint.bpSide + guide.name().replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT),
+                jnt = pm.joint(n=blueprint.side + guide.name().replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT),
                                p=guidePos)
                 if i > 1:
                     pm.joint(prevJnt, e=True, oj='xyz', secondaryAxisOrient='yup', zso=True)
@@ -412,7 +412,7 @@ class ToolWindow(QMainWindow):
             jntList[-1].jointOrientX.set(0)
             jntList[-1].jointOrientY.set(0)
             jntList[-1].jointOrientZ.set(0)
-            parentName = blueprint.bpParent.replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT)
+            parentName = blueprint.parent.replace(MRIGLOBALS.BPGUIDE, MRIGLOBALS.BNDJNT)
             parentChildPairs[parentName] = jntList[0]
 
         for parent, child in parentChildPairs.iteritems():
@@ -449,7 +449,7 @@ class ToolWindow(QMainWindow):
                 return None
 
     @staticmethod
-    def get_settings_class(bp_type):
+    def get_settings_class(type_bp):
         bp_class = None
         print inspect.getmembers(blueprint_settings, inspect.isclass)
         classes = [m[1] for m in inspect.getmembers(blueprint_settings, inspect.isclass)
@@ -457,7 +457,7 @@ class ToolWindow(QMainWindow):
 
         for cl in classes:
             print cl
-            if cl.TYPE == bp_type:
+            if cl.TYPE == type_bp:
                 return cl
             elif cl.TYPE == 'blueprint':
                 bp_class = cl
@@ -465,7 +465,7 @@ class ToolWindow(QMainWindow):
         return bp_class
 
     @staticmethod
-    def get_bp_dialog_class(bp_type):
+    def get_bp_dialog_class(type_bp):
         bp_class = None
         print inspect.getmembers(bp_dlg, inspect.isclass)
         classes = [m[1] for m in inspect.getmembers(bp_dlg, inspect.isclass)
@@ -473,7 +473,7 @@ class ToolWindow(QMainWindow):
 
         for cl in classes:
             print cl
-            if cl.TYPE == bp_type:
+            if cl.TYPE == type_bp:
                 return cl
             elif cl.TYPE == 'blueprint':
                 bp_class = cl

@@ -102,7 +102,7 @@ class LabelEditWidget(QWidget):
         if self.edit_size > 0:
             self.edit.setFixedWidth(self.edit_size)
         else:
-            self.edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.layout.addWidget(self.edit, Qt.AlignLeft)
 
         main_layout.addLayout(self.layout)

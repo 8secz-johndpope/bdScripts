@@ -82,11 +82,11 @@ class Char(object):
         utils.addStringAttr(self.ch_top_grp, 'name', self.ch_name)
         utils.addMessageAttr(self.ch_top_grp, self.ch_main_ctrl, 'mainController')
         utils.addMessageAttr(self.ch_top_grp, self.ch_bp_grp, MRIGLOBALS.CHBPGRP)
-        # utils.addMessageAttr(self.ch_top_grp, self.ch_bp_list[0].bpTopGrp, 'rootName')
+        # utils.addMessageAttr(self.ch_top_grp, self.ch_bp_list[0].top_grp, 'rootName')
 
     def addBlueprint(self, blueprint):
         self.ch_bp_list.append(blueprint)
-        pm.parent(blueprint.bpTopGrp, self.ch_bp_grp)
+        pm.parent(blueprint.top_grp, self.ch_bp_grp)
 
     def restore(self):
         self.ch_top_grp = pm.ls(self.ch_name)[0]
@@ -101,13 +101,13 @@ class Char(object):
 
     def hasBlueprint(self, blueprintName):
         for bp in self.ch_bp_list:
-            if blueprintName == bp.bpName:
+            if blueprintName == bp.name:
                 return 1
         return 0
 
-    def getSelectedBlueprint(self, bpName):
+    def getSelectedBlueprint(self, name):
         for bp in self.ch_bp_list:
-            if bp.bpName == bpName:
+            if bp.name == name:
                 return bp
 
         return None
@@ -116,7 +116,7 @@ class Char(object):
         self.ch_info['name'] = self.ch_name
         self.ch_info['blueprintsGrp'] = str(self.ch_bp_grp)
         self.ch_info['controller'] = str(self.ch_main_ctrl)
-        self.ch_info['blueprintsList'] = [bp.bpTopGrp for bp in self.ch_bp_list]
+        self.ch_info['blueprintsList'] = [bp.top_grp for bp in self.ch_bp_list]
         strInfo = json.dumps(self.ch_info)
 
         if pm.attributeQuery('info', node=self.ch_top_grp, ex=1):
@@ -131,21 +131,21 @@ class Char(object):
 
         if len(blueprintsList):
             for bp in blueprintsList:
-                bpTopGrp = pm.ls(bp)[0]
-                bpName = bpTopGrp.attr('name').get()
-                bpParent = bpTopGrp.attr('parent').get()
-                bpType = bpTopGrp.attr('type').get()
-                bpInfo = ast.literal_eval(bpTopGrp.attr('info').get())
+                top_grp = pm.ls(bp)[0]
+                name = top_grp.attr('name').get()
+                parent = top_grp.attr('parent').get()
+                type_bp = top_grp.attr('type').get()
+                info = ast.literal_eval(top_grp.attr('info').get())
 
-                bpClass = self.restoreBpClass(blueprintModules, bpType)
+                bpClass = self.restoreBpClass(blueprintModules, type_bp)
 
-                bpRestored = bpClass(name=bpName, parent=bpParent, buildInfo=bpInfo, character=self)
+                bpRestored = bpClass(name=name, parent=parent, buildInfo=info, character=self)
                 bpRestored.restore()
                 self.addBlueprint(bpRestored)
 
     @staticmethod
-    def restoreBpClass(blueprintModules, bpType):
-        mod = blueprintModules[bpType]
+    def restoreBpClass(blueprintModules, type_bp):
+        mod = blueprintModules[type_bp]
         blueprintClass = getattr(mod, mod.CLASS_NAME)
 
         if blueprintClass:
