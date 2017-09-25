@@ -33,7 +33,6 @@ class zooSurgeonCommand(om.MPxCommand):
         return zooSurgeonCommand()
 
     def doIt(self,argList):
-
         mSelList = om.MGlobal.getActiveSelectionList()
 
         if mSelList.length() > 0:
@@ -82,51 +81,73 @@ class zooSurgeonCommand(om.MPxCommand):
             components.addElements(mFaceVerts)
             vertIter = om.MItMeshVertex(node,vertComp)
             while not vertIter.isDone():
-                print vertIter.index()
                 weights, infIndex = skinNode.getWeights(node, vertIter.currentItem())
                 # print weights, infIndex
-                self.averageFaceWeights(weights)
+                self.averageFaceWeights(weights, mSkinInf)
                 vertIter.next()
             self.setFaceWeights(polyIter.index(), self.averageWeights, mSkinInf)
             polyIter.next(None)
 
         print self.facesWeights
         print self.averageWeights
-        #
-        #
-        # allFaces = []
-        # for i in range(numFaces):
-        #     allFaces.append(i)
-        # translation = om.MFloatVector(0,0,0)
-        # for inf, faces in self.facesWeights.iteritems():
-        #     dgMod = om.MDagModifier()
-        #     meshName = node.partialPathName()
-        #     proxyName = meshName.split('|')[-1] + '_' + inf + '_proxy'
-        #     dgMod.commandToExecute('duplicate -n ' + proxyName + ' ' + meshName)
-        #     #dgMod.commandToExecute('group -w -n ' + proxyName + '_grp ' + proxyName)
-        #     dgMod.commandToExecute('parent -w ' + proxyName)
-        #     dgMod.doIt()
-        #
-        #     duplicatedMeshDag = self.getDagPath(proxyName)
-        #     self.unlockDupChannels(duplicatedMeshDag)
-        #     duplicatedFn = om.MFnMesh(duplicatedMeshDag)
-        #     facesTodelete = list(set(allFaces) - set(faces))
-        #     facesArray = om.MIntArray()
-        #
-        #     if len(facesTodelete) > 0:
-        #         for f in facesTodelete:
-        #             facesArray.append(f)
-        #
-        #         duplicatedFn.extractFaces(facesArray,translation)
-        #         duplicatedFn.collapseFaces(facesArray)
-        #         duplicatedFn.updateSurface()
-        #
-        #     self.setProxyPivot(duplicatedMeshDag,inf)
-        #     self.proxyInfluencePairs[duplicatedMeshDag] = self.getDagPath(inf)
+
+
+        allFaces = []
+        for i in range(numFaces):
+            allFaces.append(i)
+        translation = om.MFloatVector(0,0,0)
+        for inf, faces in self.facesWeights.iteritems():
+            dgMod = om.MDagModifier()
+            meshName = node.partialPathName()
+            proxyName = meshName.split('|')[-1] + '_' + inf + '_proxy'
+            dgMod.commandToExecute('duplicate -n ' + proxyName + ' ' + meshName)
+            #dgMod.commandToExecute('group -w -n ' + proxyName + '_grp ' + proxyName)
+            dgMod.commandToExecute('parent -w ' + proxyName)
+            dgMod.doIt()
+
+            duplicatedMeshDag = self.getDagPath(proxyName)
+            self.unlockDupChannels(duplicatedMeshDag)
+            duplicatedFn = om.MFnMesh(duplicatedMeshDag)
+            facesTodelete = list(set(allFaces) - set(faces))
+            facesArray = om.MIntArray()
+
+            if len(facesTodelete) > 0:
+                for f in facesTodelete:
+                    facesArray.append(f)
+
+                duplicatedFn.extractFaces(facesArray,translation)
+                duplicatedFn.collapseFaces(facesArray)
+                duplicatedFn.updateSurface()
+
+            # self.setProxyPivot(duplicatedMeshDag,inf)
+            # self.proxyInfluencePairs[duplicatedMeshDag] = self.getDagPath(inf)
         #
         # self.animateProxy()
         # self.groupProxies(node)
-    
+
+    def averageFaceWeights(self, weights, skinInf):
+        # non_zero_weights = {}
+        # for index, value in enumerate(weights):
+        #     if value > 0:
+        #         non_zero_weights[skinInf[index].partialPathName()] = value
+        # print non_zero_weights
+        for i in range(len(self.averageWeights)):
+            self.averageWeights[i] += weights[i]
+
+    def setFaceWeights(self, polyIndex, weights, mSkinInf):
+        maxValue = sorted(weights)[-1]
+        index = list(weights).index(maxValue)
+        self.appendFaceWeights(polyIndex, mSkinInf[index].partialPathName())
+
+    def appendFaceWeights(self, polyIndex, infName):
+        index = int(polyIndex)
+        if self.facesWeights.has_key(infName):
+            val = self.facesWeights[infName]
+            val.append(index)
+            self.facesWeights[infName] = val
+        else:
+            self.facesWeights[infName] = [index]
+
     def groupProxies(self,node):
         dgMod = om.MDagModifier()
         proxiesString = ''
@@ -235,21 +256,21 @@ class zooSurgeonCommand(om.MPxCommand):
         
         return attrCurve
         
-    def unlockDupChannels(self,dagMesh):
+    def unlockDupChannels(self, dagMesh):
         depNode = om.MFnDependencyNode(dagMesh.node())
-        depNode.findPlug("translateX").setLocked(0)
-        depNode.findPlug("translateY").setLocked(0)
-        depNode.findPlug("translateZ").setLocked(0)
-        
-        depNode.findPlug("rotateX").setLocked(0)
-        depNode.findPlug("rotateY").setLocked(0)
-        depNode.findPlug("rotateZ").setLocked(0)
+        depNode.findPlug("translateX", False).isLocked = False
+        depNode.findPlug("translateY", False).isLocked = False
+        depNode.findPlug("translateZ", False).isLocked = False
 
-        depNode.findPlug("scaleX").setLocked(0)
-        depNode.findPlug("scaleY").setLocked(0)
-        depNode.findPlug("scaleZ").setLocked(0)
-        
-        
+        depNode.findPlug("rotateX", False).isLocked = False
+        depNode.findPlug("rotateY", False).isLocked = False
+        depNode.findPlug("rotateZ", False).isLocked = False
+
+        depNode.findPlug("scaleX", False).isLocked = False
+        depNode.findPlug("scaleY", False).isLocked = False
+        depNode.findPlug("scaleZ", False).isLocked = False
+
+
     def setProxyPivot(self,proxy,jnt):
         proxyTransformFn = om.MFnTransform(proxy)
         jntDagPath = self.getDagPath(jnt)
@@ -328,26 +349,7 @@ class zooSurgeonCommand(om.MPxCommand):
             jntTransformMatrix.getScale(scaleDoubleArrayPtr,om.MSpace.kWorld)
             jntscale = [om.MScriptUtil().getDoubleArrayItem( scaleDoubleArrayPtr, 0 ),om.MScriptUtil().getDoubleArrayItem( scaleDoubleArrayPtr, 1 ),om.MScriptUtil().getDoubleArrayItem( scaleDoubleArrayPtr, 2 )]
             return jntscale
-        
-            
-        
-    def averageFaceWeights(self,weights):
-        for i in range(len(self.averageWeights)):
-            self.averageWeights[i] += weights[i] 
-            
-    def setFaceWeights(self,polyIndex,weights,mSkinInf):
-        maxValue = sorted(weights)[-1]
-        index = list(weights).index(maxValue)
-        self.appendFaceWeights(polyIndex,mSkinInf[index].partialPathName())
-        
-    def appendFaceWeights(self,polyIndex,infName):
-        if self.facesWeights.has_key(infName):
-            val = self.facesWeights[infName]
-            val.append(polyIndex)
-            self.facesWeights[infName] = val
-        else:
-            self.facesWeights[infName] = [polyIndex]
-        
+
     def getDagPath(self,proxyName):
         mSelList =  om.MSelectionList()
         try:
@@ -355,8 +357,7 @@ class zooSurgeonCommand(om.MPxCommand):
         except:
             return None
         
-        mDagPath = om.MDagPath()
-        mSelList.getDagPath(0,mDagPath)
+        mDagPath = mSelList.getDagPath(0)
         
         if mDagPath:
             return mDagPath
@@ -367,9 +368,7 @@ class zooSurgeonCommand(om.MPxCommand):
         '''
         get a list of all the skin clusters in the file, iterate and see if the shapes connected match our selection
         '''
-        print fnMesh.fullPathName()
         self.inPlug = fnMesh.findPlug('inMesh', False)
-        print self.inPlug.name()
         connections = self.inPlug.connectedTo(True, False)
         for c in connections:
             mObj = c.node()
