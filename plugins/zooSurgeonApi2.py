@@ -14,384 +14,360 @@ def maya_useNewAPI():
     pass
 
 
-class zooSurgeonCommand(om.MPxCommand):
-    cmdName = "zooSurgeonCommand"
+class ZooSurgeonCommand(om.MPxCommand):
+    cmdName = "zooSurgeon"
+    proxy_groups = ''
+    proxies = []
+    average_weights = []
+    faces_weights = {}
+    proxy_influence_pairs = {}
+    ac_translate = {}
+    ac_rotate = {}
+    ac_scale = {}
+    in_plug = om.MPlug()
+    selection_iter = None
+    selection_prev = None
 
     def __init__(self):
         om.MPxCommand.__init__(self)
-        self.proxyGroups = ''
-        self.averageWeights = []
-        self.facesWeights = {}
-        self.proxyInfluencePairs = {}
-        self.animCurvesTranslate = {}
-        self.animCurvesRotate = {}
-        self.animCurvesScale = {}
-        self.inPlug = om.MPlug()
 
     @staticmethod
     def creator():
-        return zooSurgeonCommand()
+        return ZooSurgeonCommand()
 
     def doIt(self,argList):
+        self.selection_prev = om.MGlobal.getActiveSelectionList()
+        self.redoIt()
 
-        mSelList = om.MGlobal.getActiveSelectionList()
+    def redoIt(self):
+        if self.selection_prev.length() > 0:
+            self.selection_iter = om.MItSelectionList(self.selection_prev, om.MFn.kInvalid)
+            while not self.selection_iter.isDone():
+                dag_path = self.selection_iter.getDagPath()
 
-        if mSelList.length() > 0:
-            for i in range(mSelList.length()):
-                mDagPath = mSelList.getDagPath(i)
-
-                if mDagPath.hasFn(om.MFn.kMesh):
-                    fnMesh = om.MFnMesh(mDagPath)
-                    skinNode = self.getSkincluster(fnMesh)
-                    if skinNode:
-                        self.createProxies(mDagPath, fnMesh, skinNode)
-                #         self.resetAttr()
-            # self.groupAllProxies()
+                if dag_path.hasFn(om.MFn.kMesh):
+                    mesh_fn = om.MFnMesh(dag_path)
+                    skin_fn = self.get_skin_cluster(mesh_fn)
+                    if skin_fn:
+                        self.create_proxies(dag_path, mesh_fn, skin_fn)
+                        # self.reset_attr()
+                        # self.group_all_proxies()
+                self.selection_iter.next()
         else:
-            sys.stdout.write('Nothing selected')
-    
-    def resetAttr(self):
-        self.averageWeights = []
-        self.facesWeights = {}
-        self.proxyInfluencePairs = {}
-        self.animCurvesTranslate = {}
-        self.animCurvesRotate = {}
-        self.animCurvesScale = {}        
-        
-    def createProxies(self, node, meshFn, skinNode):
-        mSkinInf = om.MDagPathArray()
-        skinInfNames = []
+            print 'Nothing selected !!!'
+
+    def undoIt(self):
+        print 'Undo Called'
+        dg_mod = om.MDagModifier()
+        print self.proxies
+        if len(self.proxies) > 0:
+            for p in self.proxies:
+                dg_mod.commandToExecute('delete ' + p)
+                dg_mod.doIt()
+        om.MGlobal.setActiveSelectionList(self.selection_prev, om.MGlobal.kReplaceList)
+        self.reset_attr()
+
+    def isUndoable(self):
+        return True
+
+    def reset_attr(self):
+        self.average_weights = []
+        self.faces_weights = {}
+        self.proxy_influence_pairs = {}
+        self.ac_translate = {}
+        self.ac_rotate = {}
+        self.ac_scale = {}
+        self.selection_prev = None
+        self.selection_iter = None
+
+    def create_proxies(self, node, mesh_fn, skin_fn):
         components = om.MFnSingleIndexedComponent()
-        mFaceVerts = om.MIntArray()
-        weights = om.MDoubleArray()
-        
-        weightsDict = {}
+
         try:
-            mSkinInf = skinNode.influenceObjects()
-            print mSkinInf
+            skin_influences = skin_fn.influenceObjects()
         except:
             sys.stderr.write('Object has no influences')
             return
-        numFaces = meshFn.numPolygons
 
-        polyIter = om.MItMeshPolygon(node)
-        while not polyIter.isDone():
-            self.averageWeights = [0] * len(mSkinInf)
-            mFaceVerts = polyIter.getVertices()
-            vertComp = components.create(om.MFn.kMeshVertComponent)
-            components.addElements(mFaceVerts)
-            vertIter = om.MItMeshVertex(node,vertComp)
-            while not vertIter.isDone():
-                print vertIter.index()
-                weights, infIndex = skinNode.getWeights(node, vertIter.currentItem())
-                # print weights, infIndex
-                self.averageFaceWeights(weights)
-                vertIter.next()
-            self.setFaceWeights(polyIter.index(), self.averageWeights, mSkinInf)
-            polyIter.next(None)
+        num_faces = mesh_fn.numPolygons
+        self.proxies = []
 
-        print self.facesWeights
-        print self.averageWeights
-        #
-        #
-        # allFaces = []
-        # for i in range(numFaces):
-        #     allFaces.append(i)
-        # translation = om.MFloatVector(0,0,0)
-        # for inf, faces in self.facesWeights.iteritems():
-        #     dgMod = om.MDagModifier()
-        #     meshName = node.partialPathName()
-        #     proxyName = meshName.split('|')[-1] + '_' + inf + '_proxy'
-        #     dgMod.commandToExecute('duplicate -n ' + proxyName + ' ' + meshName)
-        #     #dgMod.commandToExecute('group -w -n ' + proxyName + '_grp ' + proxyName)
-        #     dgMod.commandToExecute('parent -w ' + proxyName)
-        #     dgMod.doIt()
-        #
-        #     duplicatedMeshDag = self.getDagPath(proxyName)
-        #     self.unlockDupChannels(duplicatedMeshDag)
-        #     duplicatedFn = om.MFnMesh(duplicatedMeshDag)
-        #     facesTodelete = list(set(allFaces) - set(faces))
-        #     facesArray = om.MIntArray()
-        #
-        #     if len(facesTodelete) > 0:
-        #         for f in facesTodelete:
-        #             facesArray.append(f)
-        #
-        #         duplicatedFn.extractFaces(facesArray,translation)
-        #         duplicatedFn.collapseFaces(facesArray)
-        #         duplicatedFn.updateSurface()
-        #
-        #     self.setProxyPivot(duplicatedMeshDag,inf)
-        #     self.proxyInfluencePairs[duplicatedMeshDag] = self.getDagPath(inf)
-        #
-        # self.animateProxy()
-        # self.groupProxies(node)
+        poly_iter = om.MItMeshPolygon(node)
+        while not poly_iter.isDone():
+            self.average_weights = [0] * len(skin_influences)
+            face_verts = poly_iter.getVertices()
+            vert_comp = components.create(om.MFn.kMeshVertComponent)
+            components.addElements(face_verts)
+            vert_iter = om.MItMeshVertex(node,vert_comp)
+            while not vert_iter.isDone():
+                weights, infIndex = skin_fn.getWeights(node, vert_iter.currentItem())
+                self.average_face_weights(weights)
+                vert_iter.next()
+            self.set_face_weights(poly_iter.index(), self.average_weights, skin_influences)
+            poly_iter.next(None)
+
+        faces_list = [i for i in range(num_faces)]
+
+        translation = om.MFloatVector(0,0,0)
+        for inf, faces in self.faces_weights.iteritems():
+            mesh_name = node.partialPathName()
+            proxy_name = mesh_name.split('|')[-1] + '_' + inf + '_proxy'
+
+            dg_mod = om.MDagModifier()
+            dg_mod.commandToExecute('duplicate -n ' + proxy_name + ' ' + mesh_name)
+            dg_mod.commandToExecute('parent -w ' + proxy_name)
+            dg_mod.doIt()
+
+            mesh_duplicate_dag = self.get_object_path(proxy_name)
+            self.unlock_channels(mesh_duplicate_dag)
+            mesh_duplicate_fn = om.MFnMesh(mesh_duplicate_dag)
+            faces_to_delete = list(set(faces_list) - set(faces))
+
+            if len(faces_to_delete) > 0:
+                mesh_duplicate_fn.extractFaces(faces_to_delete,translation)
+                mesh_duplicate_fn.collapseFaces(faces_to_delete)
+                mesh_duplicate_fn.updateSurface()
+
+            # self.set_proxy_pivot(mesh_duplicate_dag,inf)
+            # self.proxy_influence_pairs[mesh_duplicate_dag] = self.get_object_path(inf)
+            self.proxies.append(proxy_name)
+
+        # self.animate_proxy()
+        # self.create_proxy_group(node)
     
-    def groupProxies(self,node):
-        dgMod = om.MDagModifier()
-        proxiesString = ''
-        for proxy in self.proxyInfluencePairs.keys():
-            proxiesString = proxiesString + proxy.partialPathName() + ' '
-        dgMod.commandToExecute('group -w -n ' + node.partialPathName() + '_proxies_grp ' + proxiesString) 
-        dgMod.doIt()
-        self.proxyGroups = self.proxyGroups + node.partialPathName() + '_proxies_grp '
+    def create_proxy_group(self,node):
+        dg_mod = om.MDagModifier()
+        proxies_str = ''
+        for proxy in self.proxy_influence_pairs.keys():
+            proxies_str = proxies_str + proxy.partialPathName() + ' '
+        dg_mod.commandToExecute('group -w -n ' + node.partialPathName() + '_proxies_grp ' + proxies_str) 
+        dg_mod.doIt()
+        self.proxy_groups = self.proxy_groups + node.partialPathName() + '_proxies_grp '
     
-    def groupAllProxies(self):
-        rigNode = self.getDagPath('*RIG')
-        proxyGroupName = ''
+    def group_all_proxies(self):
+        rig_node = self.get_object_path('*RIG')
+        proxy_group_name = ''
 
-        if rigNode:
-            proxyGroupName = rigNode.partialPathName()
-        if proxyGroupName != '':
-            proxyGroupName += '_proxies_grp'
+        if rig_node:
+            proxy_group_name = rig_node.partialPathName()
+        if proxy_group_name != '':
+            proxy_group_name += '_proxies_grp'
         else:
-            proxyGroupName = 'proxies_grp'
+            proxy_group_name = 'proxies_grp'
             
-        dgMod = om.MDagModifier()
-        dgMod.commandToExecute('group -w -n ' + proxyGroupName +' ' + self.proxyGroups) 
-        dgMod.doIt()
+        dg_mod = om.MDagModifier()
+        dg_mod.commandToExecute('group -w -n ' + proxy_group_name +' ' + self.proxy_groups) 
+        dg_mod.doIt()
     
-    def animateProxy(self):
-        startTime = oma.MAnimControl.minTime()
-        endTime = oma.MAnimControl.maxTime()
-        startVal = int(startTime.asUnits(om.MTime.kPALFrame))
-        endVal = int(endTime.asUnits(om.MTime.kPALFrame))
+    def animate_proxy(self):
+        start_time = oma.MAnimControl.minTime()
+        end_time = oma.MAnimControl.maxTime()
+        start_val = int(start_time.asUnits(om.MTime.kPALFrame))
+        end_val = int(end_time.asUnits(om.MTime.kPALFrame))
         
-        #self.constraintProxies()
-        startTranslation = {}
-        startRotation = {}
-        self.createProxyAnimCurves()
-        for i in range(startVal,endVal+1):
-            currentTime = om.MTime(i,om.MTime.kPALFrame)
-            oma.MAnimControl.setCurrentTime(currentTime)
-            for proxyDag,jntDag in self.proxyInfluencePairs.iteritems():
-                if i == startVal:
-                    startTranslation[jntDag] = self.getJointValue(jntDag,'t')
-                    jntRotation = self.getJointValue(jntDag,'r')
-                    jntScale = self.getJointValue(jntDag,'s')
-                    self.addProxyKey(currentTime,proxyDag,om.MVector(0,0,0),jntRotation,jntScale)
+        start_translation = {}
+        self.create_proxy_ac()
+        
+        for i in range(start_val,end_val+1):
+            current_time = om.MTime(i, om.MTime.kPALFrame)
+            oma.MAnimControl.setCurrentTime(current_time)
+            for proxy_dag, jntDag in self.proxy_influence_pairs.iteritems():
+                if i == start_val:
+                    start_translation[jntDag] = self.get_joint_value(jntDag, 't')
+                    jnt_rotation = self.get_joint_value(jntDag, 'r')
+                    jnt_scale = self.get_joint_value(jntDag, 's')
+                    self.add_proxy_key(current_time,proxy_dag, om.MVector(0,0,0),jnt_rotation,jnt_scale)
                 else:
-                    jntTranslation = self.getJointValue(jntDag,'t')
-                    deltaTranslation = startTranslation[jntDag] - jntTranslation
-                    deltaTranslation = om.MVector(-1*deltaTranslation.x,-1*deltaTranslation.y,-1*deltaTranslation.z)
+                    jnt_translation = self.get_joint_value(jntDag, 't')
+                    delta_translation = start_translation[jntDag] - jnt_translation
+                    delta_translation = om.MVector(-1*delta_translation.x, -1*delta_translation.y, -1*delta_translation.z)
                     
-                    jntRotation = self.getJointValue(jntDag,'r')
-                    jntScale = self.getJointValue(jntDag,'s')
-                    
-                    
-                    self.addProxyKey(currentTime,proxyDag,deltaTranslation,jntRotation,jntScale)
+                    jnt_rotation = self.get_joint_value(jntDag, 'r')
+                    jnt_scale = self.get_joint_value(jntDag, 's')
 
-        oma.MAnimControl.setCurrentTime(startTime)        
+                    self.add_proxy_key(current_time,proxy_dag, delta_translation, jnt_rotation, jnt_scale)
+
+        oma.MAnimControl.setCurrentTime(start_time)        
                 
-    def constraintProxies(self):
-        dgMod = om.MDagModifier()
-        for proxyDag,jntDag in self.proxyInfluencePairs.iteritems():
-            proxyTransformFn = om.MFnTransform(proxyDag)
-            jntTransformFn = om.MFnTransform(jntDag)
-            
-            dgMod.commandToExecute('parentConstraint -mo ' + jntTransformFn.name() + ' ' + proxyTransformFn.name() )
-            dgMod.doIt()
+    # def constrain_proxy(self):
+    #     dg_mod = om.MDagModifier()
+    #     for proxy_dag,jntDag in self.proxy_influence_pairs.iteritems():
+    #         proxy_transform_fn = om.MFnTransform(proxy_dag)
+    #         jntTransformFn = om.MFnTransform(jntDag)
+    #
+    #         dg_mod.commandToExecute('parentConstraint -mo ' + jntTransformFn.name() + ' '
+    #                                           + proxy_transform_fn.name() )
+    #         dg_mod.doIt()
     
-    def addProxyKey(self,time,proxyDag,translate,rotate,scale):
-        self.animCurvesTranslate[proxyDag][0].addKeyframe(time,translate.x)
-        self.animCurvesTranslate[proxyDag][1].addKeyframe(time,translate.y)
-        self.animCurvesTranslate[proxyDag][2].addKeyframe(time,translate.z)
+    def add_proxy_key(self, time, proxy_dag, translate, rotate,scale):
+        self.ac_translate[proxy_dag][0].addKeyframe(time, translate.x)
+        self.ac_translate[proxy_dag][1].addKeyframe(time, translate.y)
+        self.ac_translate[proxy_dag][2].addKeyframe(time, translate.z)
 
-        self.animCurvesRotate[proxyDag][0].addKeyframe(time,math.radians(rotate[0]))
-        self.animCurvesRotate[proxyDag][1].addKeyframe(time,math.radians(rotate[1]))
-        self.animCurvesRotate[proxyDag][2].addKeyframe(time,math.radians(rotate[2]))
+        self.ac_rotate[proxy_dag][0].addKeyframe(time, math.radians(rotate[0]))
+        self.ac_rotate[proxy_dag][1].addKeyframe(time, math.radians(rotate[1]))
+        self.ac_rotate[proxy_dag][2].addKeyframe(time, math.radians(rotate[2]))
 
-        self.animCurvesScale[proxyDag][0].addKeyframe(time,scale[0])
-        self.animCurvesScale[proxyDag][1].addKeyframe(time,scale[1])
-        self.animCurvesScale[proxyDag][2].addKeyframe(time,scale[2])
+        self.ac_scale[proxy_dag][0].addKeyframe(time, scale[0])
+        self.ac_scale[proxy_dag][1].addKeyframe(time, scale[1])
+        self.ac_scale[proxy_dag][2].addKeyframe(time, scale[2])
         
-    def createProxyAnimCurves(self):
-        for proxyDag in self.proxyInfluencePairs.keys():
-            proxyDagNodeFn = om.MFnDagNode(proxyDag)
+    def create_proxy_ac(self):
+        for proxy_dag in self.proxy_influence_pairs.keys():
+            proxy_dag_fn = om.MFnDagNode(proxy_dag)
             
-            attrXCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'translateX')
-            attrYCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'translateY')
-            attrZCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'translateZ')
+            x_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'translateX')
+            y_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'translateY')
+            z_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'translateZ')
 
-            self.animCurvesTranslate[proxyDag] = [attrXCurve,attrYCurve,attrZCurve]
+            self.ac_translate[proxy_dag] = [x_ac, y_ac, z_ac]
             
-            attrXCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'rotateX')
-            attrYCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'rotateY')
-            attrZCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'rotateZ')
+            x_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'rotateX')
+            y_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'rotateY')
+            z_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'rotateZ')
         
-            self.animCurvesRotate[proxyDag] = [attrXCurve,attrYCurve,attrZCurve]
+            self.ac_rotate[proxy_dag] = [x_ac,y_ac,z_ac]
             
-            attrXCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'scaleX')
-            attrYCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'scaleY')
-            attrZCurve = self.createAnimCurve(proxyDagNodeFn,proxyDag,'scaleZ')
+            x_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'scaleX')
+            y_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'scaleY')
+            z_ac = self.create_ac(proxy_dag_fn,proxy_dag, 'scaleZ')
         
-            self.animCurvesScale[proxyDag] = [attrXCurve,attrYCurve,attrZCurve]
+            self.ac_scale[proxy_dag] = [x_ac, y_ac, z_ac]
             
-            
-    def createAnimCurve(self,dagNodeFn,dag,attribute):
-        attr = dagNodeFn.attribute(attribute)
-        attrCurve = oma.MFnAnimCurve()
-        attrCurve.create(dag.transform(),attr, None )
+    def create_ac(self, dag_fn, dag, attribute):
+        attr = dag_fn.attribute(attribute)
+        anim_curve = oma.MFnAnimCurve()
+        anim_curve.create(dag.transform(), attr, None)
+        return anim_curve
         
-        return attrCurve
+    def unlock_channels(self, dag_mesh):
+        dep_node = om.MFnDependencyNode(dag_mesh.node())
+        dep_node.findPlug("translateX", False).isLocked = False
+        dep_node.findPlug("translateY", False).isLocked = False
+        dep_node.findPlug("translateZ", False).isLocked = False
         
-    def unlockDupChannels(self,dagMesh):
-        depNode = om.MFnDependencyNode(dagMesh.node())
-        depNode.findPlug("translateX").setLocked(0)
-        depNode.findPlug("translateY").setLocked(0)
-        depNode.findPlug("translateZ").setLocked(0)
-        
-        depNode.findPlug("rotateX").setLocked(0)
-        depNode.findPlug("rotateY").setLocked(0)
-        depNode.findPlug("rotateZ").setLocked(0)
+        dep_node.findPlug("rotateX", False).isLocked = False
+        dep_node.findPlug("rotateY", False).isLocked = False
+        dep_node.findPlug("rotateZ", False).isLocked = False
 
-        depNode.findPlug("scaleX").setLocked(0)
-        depNode.findPlug("scaleY").setLocked(0)
-        depNode.findPlug("scaleZ").setLocked(0)
+        dep_node.findPlug("scaleX", False).isLocked = False
+        dep_node.findPlug("scaleY", False).isLocked = False
+        dep_node.findPlug("scaleZ", False).isLocked = False
         
+    def set_proxy_pivot(self, proxy, jnt):
+        proxy_transform_fn = om.MFnTransform(proxy)
+        jnt_dag_path = self.get_object_path(jnt)
+        jnt_pivot = self.get_joint_value(jnt_dag_path,'t')
+        proxy_transform_fn.setRotatePivot(om.MPoint(jnt_pivot.x, jnt_pivot.y, jnt_pivot.z), om.MSpace.kWorld,1)
+        proxy_transform_fn.setScalePivot(om.MPoint(jnt_pivot.x, jnt_pivot.y, jnt_pivot.z), om.MSpace.kWorld,1)
         
-    def setProxyPivot(self,proxy,jnt):
-        proxyTransformFn = om.MFnTransform(proxy)
-        jntDagPath = self.getDagPath(jnt)
-        jntPivot = self.getJointValue(jntDagPath,'t')
-        proxyTransformFn.setRotatePivot(om.MPoint(jntPivot.x,jntPivot.y,jntPivot.z),om.MSpace.kWorld,1)
-        proxyTransformFn.setScalePivot(om.MPoint(jntPivot.x,jntPivot.y,jntPivot.z),om.MSpace.kWorld,1)
+        proxy_points = self.get_proxy_points(proxy)
+        proxy_uv = self.get_proxy_uv(proxy)
         
-        proxyPoints = self.getProxyPoints(proxy)
-        proxyUvs = self.getProxyUVs(proxy)
+        jnt_scale = self.get_joint_value(jnt_dag_path, 's')
         
-        jntScale = self.getJointValue(jntDagPath,'s')
+        # scaleDoubleArray = om.MScriptUtil()
+        # scaleDoubleArray.createFromList( [jnt_scale[0], jnt_scale[1], jnt_scale[2]], 3 )
+        # scaleDoubleArrayPtr = scaleDoubleArray.asDoublePtr()
+        proxy_transform_fn.setScale(jnt_scale)
         
-        scaleDoubleArray = om.MScriptUtil()
-        scaleDoubleArray.createFromList( [jntScale[0], jntScale[1], jntScale[2]], 3 )
-        scaleDoubleArrayPtr = scaleDoubleArray.asDoublePtr()
-        proxyTransformFn.setScale(scaleDoubleArrayPtr)
+        jnt_rotation = self.get_joint_value(jnt_dag_path,'r')
+        euler_rotation = om.MEulerRotation(math.radians(jnt_rotation[0]), math.radians(jnt_rotation[1]),
+                                           math.radians(jnt_rotation[2]))
+        proxy_transform_fn.setRotation(euler_rotation)
+        self.set_proxy_points(proxy, proxy_points)
+        self.set_proxy_uv(proxy, proxy_uv)
         
-        jntRotate = self.getJointValue(jntDagPath,'r')
-        eulerRotation = om.MEulerRotation(math.radians(jntRotate[0]),math.radians(jntRotate[1]),math.radians(jntRotate[2]))
-        proxyTransformFn.setRotation(eulerRotation)
-        self.setProxyPoints(proxy,proxyPoints)
-        self.setProxyUVs(proxy,proxyUvs)
-        
-        
-        #proxyTransformFn.setTranslation(om.MVector(-1*jntPivot.x,-1*jntPivot.y,-1*jntPivot.z),om.MSpace.kWorld)
-        #dgMod = om.MDagModifier()
-        #dgMod.commandToExecute('makeIdentity -apply true -t 1 -r 1 -s 1 ' + proxyTransformFn.name())
-        #dgMod.doIt()
-        #proxyTransformFn.setTranslation(om.MVector(jntPivot.x,jntPivot.y,jntPivot.z),om.MSpace.kWorld)
-        
-        #m_list = [[0.0 for x in range(4)] for x in range(4)]
-        #m_list[0][0] = m_list[1][1] = m_list[2][2] = 1.0
-        #m_list[3][3] = 1.0
-        #zeroMatrix = om.MMatrix()
-        #om.MScriptUtil.createMatrixFromList( m_list, zeroMatrix )
-        #transformMatrix = om.MTransformationMatrix(zeroMatrix)
-        #proxyTransformFn.setRestPosition(transformMatrix)
-
-    def getProxyUVs(self,proxy):
-        proxyMeshFn = om.MFnMesh(proxy)
+    def get_proxy_uv(self ,proxy):
+        proxy_mesh_fn = om.MFnMesh(proxy)
         u = om.MFloatArray()
         v= om.MFloatArray()
-        proxyMeshFn.getUVs(u,v)
+        proxy_mesh_fn.getUVs(u,v)
         return [u,v]
 
-    def setProxyUVs(self,proxy,uvs):
-        proxyMeshFn = om.MFnMesh(proxy)
-        proxyMeshFn.setUVs(uvs[0],uvs[1])
+    def set_proxy_uv(self, proxy, uvs):
+        proxy_mesh_fn = om.MFnMesh(proxy)
+        proxy_mesh_fn.setUVs(uvs[0],uvs[1])
 
+    def get_proxy_points(self, proxy):
+        proxy_mesh_fn = om.MFnMesh(proxy)
+        all_points = proxy_mesh_fn.getPoints(om.MSpace.kWorld)
+        return all_points
     
-    def getProxyPoints(self,proxy):
-        proxyMeshFn = om.MFnMesh(proxy)
-        allPoints = om.MPointArray()
-        proxyMeshFn.getPoints(allPoints ,om.MSpace.kWorld)
-        return allPoints
-    
-    def setProxyPoints(self,proxy,points):
-        proxyMeshFn = om.MFnMesh(proxy)
-        proxyMeshFn.setPoints(points,om.MSpace.kWorld)
+    def set_proxy_points(self, proxy, points):
+        proxy_mesh_fn = om.MFnMesh(proxy)
+        proxy_mesh_fn.setPoints(points, om.MSpace.kWorld)
         
-    def getJointValue(self,jntDag,val):
-        jntDagPath = self.getDagPath(jntDag)
-        jntMatrix = jntDagPath.inclusiveMatrix()
-        jntTransformMatrix = om.MTransformationMatrix(jntMatrix)
+    def get_joint_value(self,jntDag,val):
+        jnt_dag_path = self.get_object_path(jntDag)
+        jnt_matrix = jnt_dag_path.inclusiveMatrix()
+        jnt_transform_matrix = om.MTransformationMatrix(jnt_matrix)
         if val == 't':
-            jntTranslation = jntTransformMatrix.getTranslation(om.MSpace.kWorld)
-            return jntTranslation
+            jnt_translation = jnt_transform_matrix.getTranslation(om.MSpace.kWorld)
+            return jnt_translation
         elif val == 'r':
-            eulerRot = jntTransformMatrix.eulerRotation()
-            jntRotation  = [math.degrees(angle) for angle in (eulerRot.x, eulerRot.y, eulerRot.z)]
-            return jntRotation 
+            euler_rotation = jnt_transform_matrix.euler_rotation()
+            jnt_rotation = [math.degrees(angle) for angle in (euler_rotation.x, euler_rotation.y, euler_rotation.z)]
+            return jnt_rotation 
         elif val == 's':
-            scaleDoubleArray = om.MScriptUtil()
-            scaleDoubleArray.createFromList( [1.0, 1.0, 1.0], 3 )
-            scaleDoubleArrayPtr = scaleDoubleArray.asDoublePtr()
-            jntTransformMatrix.getScale(scaleDoubleArrayPtr,om.MSpace.kWorld)
-            jntscale = [om.MScriptUtil().getDoubleArrayItem( scaleDoubleArrayPtr, 0 ),om.MScriptUtil().getDoubleArrayItem( scaleDoubleArrayPtr, 1 ),om.MScriptUtil().getDoubleArrayItem( scaleDoubleArrayPtr, 2 )]
-            return jntscale
+            jnt_scale = jnt_transform_matrix.getScale(om.MSpace.kWorld)
+            return jnt_scale
         
+    def average_face_weights(self, weights):
+        for i in range(len(self.average_weights)):
+            self.average_weights[i] += weights[i] 
             
+    def set_face_weights(self, polyIndex, weights, skin_influences):
+        max_value = sorted(weights)[-1]
+        index = list(weights).index(max_value)
+        self.append_face_weights(polyIndex, skin_influences[index].partialPathName())
         
-    def averageFaceWeights(self,weights):
-        for i in range(len(self.averageWeights)):
-            self.averageWeights[i] += weights[i] 
-            
-    def setFaceWeights(self,polyIndex,weights,mSkinInf):
-        maxValue = sorted(weights)[-1]
-        index = list(weights).index(maxValue)
-        self.appendFaceWeights(polyIndex,mSkinInf[index].partialPathName())
-        
-    def appendFaceWeights(self,polyIndex,infName):
-        if self.facesWeights.has_key(infName):
-            val = self.facesWeights[infName]
+    def append_face_weights(self, polyIndex, infName):
+        if self.faces_weights.has_key(infName):
+            val = self.faces_weights[infName]
             val.append(polyIndex)
-            self.facesWeights[infName] = val
+            self.faces_weights[infName] = val
         else:
-            self.facesWeights[infName] = [polyIndex]
+            self.faces_weights[infName] = [polyIndex]
         
-    def getDagPath(self,proxyName):
-        mSelList =  om.MSelectionList()
+    def get_object_path(self,proxy_name):
+        sel_list =  om.MSelectionList()
         try:
-            mSelList.add(proxyName)
+            sel_list.add(proxy_name)
         except:
             return None
         
-        mDagPath = om.MDagPath()
-        mSelList.getDagPath(0,mDagPath)
-        
-        if mDagPath:
-            return mDagPath
-        else:
-            return None
+        dag_path = sel_list.getDagPath(0)
+        return dag_path
     
-    def getSkincluster(self, fnMesh):
+    def get_skin_cluster(self, mesh_fn):
         '''
         get a list of all the skin clusters in the file, iterate and see if the shapes connected match our selection
         '''
-        print fnMesh.fullPathName()
-        self.inPlug = fnMesh.findPlug('inMesh', False)
-        print self.inPlug.name()
-        connections = self.inPlug.connectedTo(True, False)
+        print mesh_fn.fullPathName()
+        self.in_plug = mesh_fn.findPlug('inMesh', False)
+        print self.in_plug.name()
+        connections = self.in_plug.connectedTo(True, False)
         for c in connections:
-            mObj = c.node()
+            obj = c.node()
             try:
-                skinClusterFn = oma.MFnSkinCluster(mObj)
-                return skinClusterFn
+                skin_cluster_fn = oma.MFnSkinCluster(obj)
+                return skin_cluster_fn
             except:
                 sys.stderr.write("No skin cluster found! ")
                 return None
 
     
-    
 def initializePlugin(plugin):
     plugin_fn = om.MFnPlugin(plugin)
     try:
-        plugin_fn.registerCommand(zooSurgeonCommand.cmdName,zooSurgeonCommand.creator)
+        plugin_fn.registerCommand(ZooSurgeonCommand.cmdName, ZooSurgeonCommand.creator)
     except:
-        sys.stderr.write("Failed to register command: " + zooSurgeonCommand.cmdName)
+        sys.stderr.write("Failed to register command: " + ZooSurgeonCommand.cmdName)
 
 def uninitializePlugin(mobject):
     plugin_fn = om.MFnPlugin(mobject)
     try:
-        plugin_fn.deregisterCommand(zooSurgeonCommand.cmdName)
+        plugin_fn.deregisterCommand(ZooSurgeonCommand.cmdName)
     except:
-        sys.stderr.write("Failed to unregister command: " + zooSurgeonCommand.cmdName)
+        sys.stderr.write("Failed to un-register command: " + ZooSurgeonCommand.cmdName)
