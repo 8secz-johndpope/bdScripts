@@ -151,6 +151,7 @@ class ZooSurgeonCommand(om.MPxCommand):
                 mesh_duplicate_fn.collapseFaces(faces_to_delete)
                 mesh_duplicate_fn.updateSurface()
 
+            # sets the proxy pivot based on the joint position / rotation
             self.set_proxy_pivot(mesh_duplicate_dag, inf)
             self.proxy_influence_pairs[mesh_duplicate_dag.partialPathName()] = self.get_object_path(inf)
             self.proxies.append(proxy_name)
@@ -169,75 +170,57 @@ class ZooSurgeonCommand(om.MPxCommand):
         self.proxy_groups = self.proxy_groups + node.partialPathName() + '_proxies_grp '
 
     def group_all_proxies(self):
-        rig_node = self.get_object_path('*RIG')
-        if rig_node:
-            self.proxy_group_name = rig_node.partialPathName()
-        if self.proxy_group_name != '':
-            self.proxy_group_name += '_proxies_grp'
-        else:
-            self.proxy_group_name = 'proxies_grp'
-            
-        dg_mod = om.MDagModifier()
-        dg_mod.commandToExecute('group -w -n ' + self.proxy_group_name + ' ' + self.proxy_groups)
-        dg_mod.doIt()
-    
+        self.proxy_group_name = 'proxies_grp'
+        try:
+            om.MGlobal.getSelectionListByName(self.proxy_group_name)
+
+            dg_mod = om.MDagModifier()
+            dg_mod.commandToExecute('parent ' + self.proxy_groups + ' ' + self.proxy_group_name)
+            dg_mod.doIt()
+        except:
+            dg_mod = om.MDagModifier()
+            dg_mod.commandToExecute('group -w -n ' + self.proxy_group_name + ' ' + self.proxy_groups)
+            dg_mod.doIt()
+
+
     def animate_proxy(self):
-        """Proxies are created with all frozen transformation. For translation we start with the first key
-        on [0, 0, 0] and after we apply deltas based on the joint delta translation.
-        The rotations and scales can be directly transferred
-
-        :return: a new animation curve
+        """Animates each proxy based on the influence animation
         """
-
         start_time = oma.MAnimControl.minTime()
         end_time = oma.MAnimControl.maxTime()
         start_val = int(start_time.asUnits(om.MTime.kPALFrame))
         end_val = int(end_time.asUnits(om.MTime.kPALFrame))
-        
-        start_translation = {}
-        start_rotation = {}
-        proxy_rotation = None
+
         self.create_proxy_ac()
+
+        # holds the start position for each proxy
+        start_joint_translation = {}
+
+        for i in range(start_val, end_val+1):
+            current_time = om.MTime(i, om.MTime.kPALFrame)
+            oma.MAnimControl.setCurrentTime(current_time)
+            for proxy, jnt_dag in self.proxy_influence_pairs.iteritems():
+                if i == start_val:
+                    start_joint_translation[proxy] = self.get_value(jnt_dag, 't')
+                else:
+                    jnt_translation = self.get_value(jnt_dag, 't')
+                    jnt_rotation = self.get_value(jnt_dag, 'r')
+                    euler_rotation = self.get_angular(jnt_rotation.asEulerRotation())
+                    delta_translation = -1.0 * (start_joint_translation[proxy] - jnt_translation)
+                    jnt_scale = self.get_value(jnt_dag, 's')
+
+                    self.add_proxy_key(current_time, proxy, delta_translation, euler_rotation, jnt_scale)
         #
-        # for i in range(start_val, end_val+1):
-        #     current_time = om.MTime(i, om.MTime.kPALFrame)
-        #     oma.MAnimControl.setCurrentTime(current_time)
-        #     for proxy, jnt_dag in self.proxy_influence_pairs.iteritems():
-        #         jnt_name = jnt_dag.partialPathName()
-        #         proxy_dag = self.get_object_path(proxy)
-        #         if i == start_val:
-        #             start_translation[jnt_name] = self.get_joint_value(jnt_dag, 't')
-        #             start_rotation[jnt_name] = self.get_joint_value(jnt_dag, 'r')
-        #             proxy_rotation = self.get_joint_value(proxy_dag, 'r')
-        #             jnt_scale = self.get_joint_value(jnt_dag, 's')
-        #             self.add_proxy_key(current_time, proxy, om.MVector(0, 0, 0), proxy_rotation , jnt_scale)
-        #         else:
-        #             jnt_translation = self.get_joint_value(jnt_dag, 't')
-        #             jnt_rotation = self.get_joint_value(jnt_dag, 'r')
-        #             delta_translation = -1.0 * (start_translation[jnt_name] - jnt_translation)
-        #             # temp_euler = start_rotation[proxy] - jnt_rotation
-        #             # delta_rotation = om.MEulerRotation(-1 * temp_euler[0], -1 * temp_euler[1], -1 * temp_euler[2])
-        #
-        #             # delta_translation = om.MVector(-1*delta_translation.x, -1*delta_translation.y,
-        #             #                                -1*delta_translation.z)
-        #             jnt_scale = self.get_joint_value(jnt_dag, 's')
-        #
-        #             self.add_proxy_key(current_time, proxy, delta_translation, proxy_rotation, jnt_scale)
-        #
-        # oma.MAnimControl.setCurrentTime(start_time)
+        oma.MAnimControl.setCurrentTime(start_time)
 
     def create_proxy_ac(self):
         for proxy in self.proxy_influence_pairs.keys():
             proxy_dag = self.get_object_path(proxy)
             proxy_dag_fn = om.MFnDagNode(proxy_dag)
 
-            proxy_transform = om.MFnTransform(proxy_dag.transform())
-            print proxy_transform.partialPathName(), proxy_transform.translation(om.MSpace.kTransform),\
-                            proxy_transform.rotation()
-
-            proxy_translation = self.get_joint_value(proxy_dag, 't', space=om.MSpace.kTransform)
-            proxy_rotation = self.get_joint_value(proxy_dag, 'r', space=om.MSpace.kObject)
-            proxy_scale = self.get_joint_value(proxy_dag, 's', space=om.MSpace.kObject)
+            proxy_translation = self.get_value(proxy_dag, 't')
+            proxy_rotation = self.get_value(proxy_dag, 'r')
+            proxy_scale = self.get_value(proxy_dag, 's')
 
             x_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'translateX', om.MFn.kAnimCurveTimeToDistance)
             y_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'translateY', om.MFn.kAnimCurveTimeToDistance)
@@ -245,9 +228,9 @@ class ZooSurgeonCommand(om.MPxCommand):
 
             self.ac_translate[proxy] = [x_ac, y_ac, z_ac]
 
-            x_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'rotateX', om.MFn.kAnimCurveTimeToAngular)
-            y_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'rotateY', om.MFn.kAnimCurveTimeToAngular)
-            z_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'rotateZ', om.MFn.kAnimCurveTimeToAngular)
+            x_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'rotateX', oma.MFnAnimCurve.kAnimCurveTA)
+            y_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'rotateY', oma.MFnAnimCurve.kAnimCurveTA)
+            z_ac = self.create_ac(proxy_dag_fn, proxy_dag, 'rotateZ', oma.MFnAnimCurve.kAnimCurveTA)
 
             self.ac_rotate[proxy] = [x_ac, y_ac, z_ac]
 
@@ -257,24 +240,31 @@ class ZooSurgeonCommand(om.MPxCommand):
 
             self.ac_scale[proxy] = [x_ac, y_ac, z_ac]
 
+            current_time = om.MTime(0, om.MTime.kPALFrame)
+            oma.MAnimControl.setCurrentTime(current_time)
+
+            euler_rotation = self.get_angular(proxy_rotation.asEulerRotation())
+
+            self.add_proxy_key(current_time, proxy, proxy_translation, euler_rotation, proxy_scale)
+
     def create_ac(self, dag_fn, dag, attribute, curve_type):
         attr = dag_fn.attribute(attribute)
         anim_curve = oma.MFnAnimCurve()
         anim_curve.create(dag.transform(), attr, curve_type)
         return anim_curve
 
-    def add_proxy_key(self, time, proxy_dag, translate, rotate, scale):
-        self.ac_translate[proxy_dag][0].addKey(time, translate.x)
-        self.ac_translate[proxy_dag][1].addKey(time, translate.y)
-        self.ac_translate[proxy_dag][2].addKey(time, translate.z)
+    def add_proxy_key(self, time, proxy, translate, rotate, scale):
+        self.ac_translate[proxy][0].addKey(time, translate.x)
+        self.ac_translate[proxy][1].addKey(time, translate.y)
+        self.ac_translate[proxy][2].addKey(time, translate.z)
 
-        self.ac_rotate[proxy_dag][0].addKey(time, rotate[0])
-        self.ac_rotate[proxy_dag][1].addKey(time, rotate[1])
-        self.ac_rotate[proxy_dag][2].addKey(time, rotate[2])
+        self.ac_rotate[proxy][0].addKey(time, math.radians(rotate[0]))
+        self.ac_rotate[proxy][1].addKey(time, math.radians(rotate[1]))
+        self.ac_rotate[proxy][2].addKey(time, math.radians(rotate[2]))
 
-        self.ac_scale[proxy_dag][0].addKey(time, scale[0])
-        self.ac_scale[proxy_dag][1].addKey(time, scale[1])
-        self.ac_scale[proxy_dag][2].addKey(time, scale[2])
+        self.ac_scale[proxy][0].addKey(time, scale[0])
+        self.ac_scale[proxy][1].addKey(time, scale[1])
+        self.ac_scale[proxy][2].addKey(time, scale[2])
         
     def unlock_channels(self, dag_mesh):
         dep_node = om.MFnDependencyNode(dag_mesh.node())
@@ -293,22 +283,18 @@ class ZooSurgeonCommand(om.MPxCommand):
     def set_proxy_pivot(self, proxy, jnt):
         proxy_transform_fn = om.MFnTransform(proxy)
         jnt_dag_path = self.get_object_path(jnt)
-        jnt_pivot = self.get_joint_value(jnt_dag_path, 't')
+        jnt_pivot = self.get_value(jnt_dag_path, 't')
         proxy_transform_fn.setRotatePivot(om.MPoint(jnt_pivot.x, jnt_pivot.y, jnt_pivot.z), om.MSpace.kWorld, 1)
         proxy_transform_fn.setScalePivot(om.MPoint(jnt_pivot.x, jnt_pivot.y, jnt_pivot.z), om.MSpace.kWorld, 1)
         
         proxy_points = self.get_proxy_points(proxy)
         proxy_uv = self.get_proxy_uv(proxy)
-        
-        jnt_scale = self.get_joint_value(jnt_dag_path, 's')
-        
-        # scaleDoubleArray = om.MScriptUtil()
-        # scaleDoubleArray.createFromList( [jnt_scale[0], jnt_scale[1], jnt_scale[2]], 3 )
-        # scaleDoubleArrayPtr = scaleDoubleArray.asDoublePtr()
+
+        jnt_scale = self.get_value(jnt_dag_path, 's')
         proxy_transform_fn.setScale(jnt_scale)
-        
-        jnt_rotation = self.get_joint_value(jnt_dag_path, 'r')
-        proxy_transform_fn.setRotation(jnt_rotation, om.MSpace.kTransform)
+
+        jnt_rotation = self.get_value(jnt_dag_path, 'r', om.MSpace.kWorld)
+        proxy_transform_fn.setRotation(jnt_rotation, om.MSpace.kWorld)
         self.set_proxy_points(proxy, proxy_points)
         self.set_proxy_uv(proxy, proxy_uv)
         
@@ -330,19 +316,19 @@ class ZooSurgeonCommand(om.MPxCommand):
         proxy_mesh_fn = om.MFnMesh(proxy)
         proxy_mesh_fn.setPoints(points, om.MSpace.kWorld)
         
-    def get_joint_value(self, jnt_dag, val, space=om.MSpace.kWorld):
+    def get_value(self, jnt_dag, val, space=om.MSpace.kWorld):
         jnt_dag_path = self.get_object_path(jnt_dag)
-        jnt_matrix = jnt_dag_path.inclusiveMatrix()
-        jnt_transform_matrix = om.MTransformationMatrix(jnt_matrix)
+        jnt_transform = om.MFnTransform(jnt_dag_path)
+
         if val == 't':
-            jnt_translation = jnt_transform_matrix.translation(space)
+            jnt_translation = jnt_transform.translation(space)
             return jnt_translation
         elif val == 'r':
-            euler_rotation = jnt_transform_matrix.rotation(False)
+            euler_rotation = jnt_transform.rotation(space, True)
             # jnt_rotation = [math.degrees(angle) for angle in (euler_rotation.x, euler_rotation.y, euler_rotation.z)]
             return euler_rotation
         elif val == 's':
-            jnt_scale = jnt_transform_matrix.scale(space)
+            jnt_scale = jnt_transform.scale()
             return jnt_scale
         
     def average_face_weights(self, weights):
@@ -372,6 +358,10 @@ class ZooSurgeonCommand(om.MPxCommand):
         dag_path = sel_list.getDagPath(0)
 
         return dag_path
+
+    def get_angular(self, rotation):
+        angular_rotation = [math.degrees(angle) for angle in (rotation.x, rotation.y, rotation.z)]
+        return angular_rotation
     
     def get_skin_cluster(self, mesh_fn):
         '''
