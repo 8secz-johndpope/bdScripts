@@ -1,5 +1,6 @@
 import maya.api.OpenMaya as om
 import maya.api.OpenMayaAnim as oma
+import maya.OpenMaya as om1
 import sys
 import math
 # from maya.OpenMayaUI import MProgressWindow
@@ -45,6 +46,7 @@ class ZooSurgeonCommand(om.MPxCommand):
     in_plug = om.MPlug()
     selection_iter = None
     selection_prev = None
+    progress_amount = 0
 
     def __init__(self):
         om.MPxCommand.__init__(self)
@@ -96,6 +98,7 @@ class ZooSurgeonCommand(om.MPxCommand):
         self.ac_rotate = {}
         self.ac_scale = {}
         self.proxies = []
+        self.progress_amount = 0
         # self.selection_prev = None
         # self.selection_iter = None
 
@@ -112,6 +115,11 @@ class ZooSurgeonCommand(om.MPxCommand):
 
         poly_iter = om.MItMeshPolygon(node)
         # iterates through all the selected mesh faces
+        computation = om1.MComputation()
+        computation.beginComputation(True, False)
+        computation.setProgressRange(0, poly_iter.count())
+        computation.setProgress(0)
+        progress_amount = 0
         while not poly_iter.isDone():
             # initialize average_weights as a zero list with the length of number of influences
             self.average_weights = [0] * len(skin_influences)
@@ -125,10 +133,12 @@ class ZooSurgeonCommand(om.MPxCommand):
                 self.average_face_weights(weights)
                 vert_iter.next()
             self.set_face_weights(poly_iter.index(), self.average_weights, skin_influences)
+            computation.setProgress(poly_iter.index())
             poly_iter.next(None)
 
         # list holding the num faces, will be used to get the faces that need to be deleted
         faces_list = [i for i in range(num_faces)]
+        computation.endComputation()
 
         for inf, faces in self.faces_weights.iteritems():
             mesh_name = node.partialPathName()
