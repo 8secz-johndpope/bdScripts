@@ -3,38 +3,38 @@ import traceback
 import os
 import inspect
 
-from ..utils.qt_handlers import QtCore, QtGui
-from ..utils import qt_handlers as qt_handlers
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
+import maya.OpenMayaUI as mui
+import shiboken2
 
 from ..utils import libWidgets as UI
-
 reload(UI)
 
 from ..utils import libUtils as utils
-
 reload(utils)
 
 import char_settings as char_settings
-
 reload(char_settings)
 
 import blueprint_settings as blueprint_settings
-
 reload(blueprint_settings)
 
 from ..character import character as char
-
 reload(char)
 
 from .. import mRigGlobals as MRIGLOBALS
-
 reload(MRIGLOBALS)
 
 mRigWin = 'mRigWindow'
 
+def getMayaWindow():
+    pointer = mui.MQtUtil.mainWindow()
+    return shiboken2.wrapInstance(long(pointer), QtWidgets.QWidget)
 
-class mRigUI(QtGui.QMainWindow):
-    def __init__(self, parent=qt_handlers.get_maya_window()):
+class mRigUI(QtWidgets.QMainWindow):
+    def __init__(self, parent=getMayaWindow()):
         super(mRigUI, self).__init__(parent)
         """
         Class members:
@@ -50,25 +50,25 @@ class mRigUI(QtGui.QMainWindow):
         self.setObjectName(mRigWin)
         self.setWindowTitle('Modular Rigging Tool')
         # ------------------------- UI elements -------------------------
-        self.tabs = QtGui.QTabWidget()
+        self.tabs = QtWidgets.QTabWidget()
         self.blueprintSettings = None
-        self.charWidget = QtGui.QWidget()
+        self.charWidget = QtWidgets.QWidget()
         self.charName = None
         self.charBox = None
         self.charNameSuffix = None
         self.charSettings = None
 
-        self.blueprintsWidget = QtGui.QWidget()
+        self.blueprintsWidget = QtWidgets.QWidget()
         self.blueprintsBox = None
         self.blueprintsSettingsLayout = None
 
-        self.listsWidget = QtGui.QWidget()
-        self.bpCharList = QtGui.QListWidget()
+        self.listsWidget = QtWidgets.QWidget()
+        self.bpCharList = QtWidgets.QListWidget()
         self.listRigs = None
 
-        self.skeletonWidget = QtGui.QWidget()
+        self.skeletonWidget = QtWidgets.QWidget()
         self.skeletonBox = None
-        self.riggingWidget = QtGui.QWidget()
+        self.riggingWidget = QtWidgets.QWidget()
         self.riggingBox = None
 
         self.infoDock = None
@@ -83,28 +83,28 @@ class mRigUI(QtGui.QMainWindow):
         """
         Sets up the UI for the tool
         """
-        centralWidget = QtGui.QWidget()
+        centralWidget = QtWidgets.QWidget()
 
         mainLayout = UI.VertBox()
         mainLayout.addWidget(self.tabs)
 
         # self.charWidget - widget holding the UI for the character creation
-        self.charWidget = QtGui.QWidget()
+        self.charWidget = QtWidgets.QWidget()
         self.addCharUI()
         self.tabs.addTab(self.charWidget, 'Character')
 
         # self.blueprintsWidget - widget holding the UI for the character creation
-        self.blueprintsWidget = QtGui.QWidget()
+        self.blueprintsWidget = QtWidgets.QWidget()
         self.addBlueprintsUI()
         self.tabs.addTab(self.blueprintsWidget, 'Blueprints')
 
         # self.createSkeletonWidget - widget holding the UI for the skeleton building, based on the layed out blueprints
-        self.skeletonWidget = QtGui.QWidget()
+        self.skeletonWidget = QtWidgets.QWidget()
         self.addSkeletonUI()
         self.tabs.addTab(self.skeletonWidget, 'Skeleton')
 
         # self.createSkeletonWidget - widget holding the UI for the skeleton building, based on the layed out blueprints
-        self.riggingWidget = QtGui.QWidget()
+        self.riggingWidget = QtWidgets.QWidget()
         self.addRiggingUI()
         self.tabs.addTab(self.riggingWidget, 'Rigging')
         #
@@ -168,7 +168,7 @@ class mRigUI(QtGui.QMainWindow):
 
         self.blueprintsBox = UI.TitledBox(title='Blueprints')
 
-        gridLayout = QtGui.QGridLayout()
+        gridLayout = QtWidgets.QGridLayout()
 
         moduleUILayout = UI.VertBox()
         moduleUILayout.setSpacing(2)
@@ -187,7 +187,7 @@ class mRigUI(QtGui.QMainWindow):
                         moduleUILayout.addWidget(moduleUI)
                         self.blueprintModulesUIs.append(moduleUI)
 
-        spacerItem = QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(1, 1, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         moduleUILayout.addItem(spacerItem)
 
         createdBlueprintsLayout = UI.VertBox()
@@ -261,7 +261,7 @@ class mRigUI(QtGui.QMainWindow):
             self.character = char.Char(charName, rootName=rootName, leftString=leftString, rightString=rightString)
             self.character.create()
             self.infoDock.infoDisplay.append('Created %s character' % charName)
-            listItem = QtGui.QListWidgetItem()
+            listItem = QtWidgets.QListWidgetItem()
             listItem.setText(self.character.chRootName)
             listItem.setTextAlignment(QtCore.Qt.AlignHCenter)
             self.bpCharList.addItem(listItem)
@@ -280,7 +280,7 @@ class mRigUI(QtGui.QMainWindow):
             print [bp.bpName for bp in self.character.chBlueprintsList]
 
             for i in range(len(self.character.chBlueprintsList)):
-                listItem = QtGui.QListWidgetItem()
+                listItem = QtWidgets.QListWidgetItem()
                 listItem.setText(self.character.chBlueprintsList[i].bpName)
                 if i == 0:
                     listItem.setTextAlignment(QtCore.Qt.AlignHCenter)
@@ -319,7 +319,7 @@ class mRigUI(QtGui.QMainWindow):
         """
         # self.getSettingsClass(modName)
         btn = UI.BlueprintButton(modName, index)
-        # color = btn.palette().color(QtGui.QPalette.Background)
+        # color = btn.palette().color(QtWidgets.QPalette.Background)
         btn.clicked.connect(self.showBlueprintSettingsUI)
         return btn
 
@@ -424,7 +424,7 @@ class mRigUI(QtGui.QMainWindow):
         pm.undoInfo(closeChunk=True)
 
     # def blueprintTreeAdd(self,itemName):
-    # 	treeItem = QtGui.QTreeWidgetItem(self.rootItem)
+    # 	treeItem = QtWidgets.QTreeWidgetItem(self.rootItem)
     # 	treeItem.setText(0,itemName)
     # 	self.blueprintsTree.expandItem(self.rootItem)
 
@@ -553,7 +553,7 @@ class mRigUI(QtGui.QMainWindow):
         return blueprintClass
 
 
-def create():
+def openTool():
     """
     Creates the tool window
     """

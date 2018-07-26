@@ -5,7 +5,6 @@ import maya.OpenMayaMPx as OpenMayaMpx
 import sys
 import math
 
-
 def maya_useNewAPI():
     """
     The presence of this function tells Maya that the plugin produces, and

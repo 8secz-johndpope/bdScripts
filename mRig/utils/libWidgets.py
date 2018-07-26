@@ -1,19 +1,20 @@
-import qt_handlers
-from qt_handlers import QtCore, QtGui
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
 
 import pymel.core as pm
 
 MIN_LABEL_WIDTH = 40
 
 
-class ButtonB(QtGui.QPushButton):
+class ButtonB(QtWidgets.QPushButton):
     def __init__(self, parent=None):
         super(ButtonB, self).__init__(parent)
         self.setFixedHeight(20)
         # self.setStyleSheet("border-top: 3px ;border-bottom: 3px ;border-right: 10px ;border-left:10px;")
 
 
-class BlueprintButton(QtGui.QPushButton):
+class BlueprintButton(QtWidgets.QPushButton):
     def __init__(self, parent=None, index=0):
         super(BlueprintButton, self).__init__(parent)
         self.index = index
@@ -39,7 +40,7 @@ class BlueprintButton(QtGui.QPushButton):
     backColor = QtCore.Property(QtGui.QColor, getBackColor, setBackColor)
 
 
-class TitledBox(QtGui.QGroupBox):
+class TitledBox(QtWidgets.QGroupBox):
     def __init__(self, parent=None, title='Title', direction='v'):
         super(TitledBox, self).__init__(parent)
         self.title = title
@@ -62,7 +63,7 @@ class TitledBox(QtGui.QGroupBox):
         self.setLayout(mainLayout)
 
 
-class LabelEditWidget(QtGui.QWidget):
+class LabelEditWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label=''):
         super(LabelEditWidget, self).__init__(parent)
         self.labelName = label
@@ -73,14 +74,14 @@ class LabelEditWidget(QtGui.QWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
         if self.labelName != '':
-            self.label = QtGui.QLabel(self.labelName)
+            self.label = QtWidgets.QLabel(self.labelName)
             self.layout.addWidget(self.label)
 
-        self.edit = QtGui.QLineEdit()
+        self.edit = QtWidgets.QLineEdit()
         self.edit.setValidator(CharNameValidator())
 
         color1 = self.edit.palette().color(self.edit.backgroundRole())
@@ -109,7 +110,7 @@ class LabelEditWidget(QtGui.QWidget):
     backColor = QtCore.Property(QtGui.QColor, getBackColor, setBackColor)
 
 
-class ObjectPickerWidget(QtGui.QWidget):
+class ObjectPickerWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label=''):
         super(ObjectPickerWidget, self).__init__(parent)
         self.labelTitle = label
@@ -120,14 +121,14 @@ class ObjectPickerWidget(QtGui.QWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = QtGui.QHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
         if self.labelTitle != '':
-            self.label = QtGui.QLabel(self.labelTitle)
+            self.label = QtWidgets.QLabel(self.labelTitle)
             self.layout.addWidget(self.label)
 
-        self.edit = QtGui.QLineEdit()
+        self.edit = QtWidgets.QLineEdit()
         self.edit.setReadOnly(1)
 
         self.pickBtn = ButtonB('<<')
@@ -139,7 +140,7 @@ class ObjectPickerWidget(QtGui.QWidget):
         self.setLayout(mainLayout)
 
 
-class SpinBox(QtGui.QWidget):
+class SpinBox(QtWidgets.QWidget):
     def __init__(self, parent=None, label='Number'):
         super(SpinBox, self).__init__(parent)
         self.labelName = label
@@ -149,11 +150,11 @@ class SpinBox(QtGui.QWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = QtGui.QGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
-        self.label = QtGui.QLabel(self.labelName)
-        self.spin = QtGui.QSpinBox()
+        self.label = QtWidgets.QLabel(self.labelName)
+        self.spin = QtWidgets.QSpinBox()
 
         self.layout.addWidget(self.label, 0, 0)
         self.layout.addWidget(self.spin, 0, 1)
@@ -162,7 +163,7 @@ class SpinBox(QtGui.QWidget):
         self.setLayout(mainLayout)
 
 
-class LabelComboWidget(QtGui.QWidget):
+class LabelComboWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label='Label', validator=None):
         super(LabelComboWidget, self).__init__(parent)
         self.labelName = label
@@ -171,12 +172,12 @@ class LabelComboWidget(QtGui.QWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.setColumnStretch(1, 1)
 
-        self.label = QtGui.QLabel(self.labelName)
+        self.label = QtWidgets.QLabel(self.labelName)
         self.label.setMinimumWidth(MIN_LABEL_WIDTH)
-        self.combo = QtGui.QComboBox()
+        self.combo = QtWidgets.QComboBox()
 
         layout.addWidget(self.label, 0, 0)
         layout.addWidget(self.combo, 0, 1)
@@ -185,7 +186,7 @@ class LabelComboWidget(QtGui.QWidget):
         self.setLayout(mainLayout)
 
 
-class VertBox(QtGui.QVBoxLayout):
+class VertBox(QtWidgets.QVBoxLayout):
     def __init__(self, *args, **kargs):
         super(VertBox, self).__init__(*args, **kargs)
         self.setSpacing(3)
@@ -193,14 +194,14 @@ class VertBox(QtGui.QVBoxLayout):
         self.setContentsMargins(0, 0, 0, 0)
 
 
-class HorBox(QtGui.QHBoxLayout):
+class HorBox(QtWidgets.QHBoxLayout):
     def __init__(self, *args, **kargs):
         super(HorBox, self).__init__(*args, **kargs)
         self.setSpacing(3)
         self.setContentsMargins(0, 0, 0, 0)
 
 
-class Separator(QtGui.QWidget):
+class Separator(QtWidgets.QWidget):
     def __init__(self, parent=None, d=0):
         super(Separator, self).__init__(parent)
         self.direction = d
@@ -209,10 +210,10 @@ class Separator(QtGui.QWidget):
     def setupUI(self):
         mainLayout = HorBox()
 
-        separator = QtGui.QFrame()
-        separator.setFrameShape(QtGui.QFrame.HLine)
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
         if self.direction:
-            separator.setFrameShape(QtGui.QFrame.VLine)
+            separator.setFrameShape(QtWidgets.QFrame.VLine)
 
         separator.setLineWidth(0.5)
         separator.setContentsMargins(0, 0, 0, 0)
@@ -221,7 +222,7 @@ class Separator(QtGui.QWidget):
         self.setLayout(mainLayout)
 
 
-class TitleBar(QtGui.QWidget):
+class TitleBar(QtWidgets.QWidget):
     def __init__(self, parent=None, title='', height=12, color=(0, 28, 36)):
         super(TitleBar, self).__init__(parent)
         self.title = title
@@ -232,13 +233,13 @@ class TitleBar(QtGui.QWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        titleFrame = QtGui.QFrame()
-        titleFrame.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Raised)
+        titleFrame = QtWidgets.QFrame()
+        titleFrame.setFrameStyle(QtWidgets.QFrame.Panel | QtWidgets.QFrame.Raised)
         titleFrame.setStyleSheet("QFrame { background-color : rgba" + self.color + "; color : white; }")
 
-        titleLayout = QtGui.QHBoxLayout()
+        titleLayout = QtWidgets.QHBoxLayout()
         titleLayout.setContentsMargins(0, 0, 0, 0)
-        self.label = QtGui.QLabel(self.title)
+        self.label = QtWidgets.QLabel(self.title)
         self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.label.setFixedHeight(self.height)
 
@@ -267,7 +268,7 @@ class CharNameValidator(QtGui.QValidator):
             return QtGui.QValidator.Invalid
 
 
-class InfoDock(QtGui.QDockWidget):
+class InfoDock(QtWidgets.QDockWidget):
     def __init__(self, parent=None):
         super(InfoDock, self).__init__(parent)
         self.setWindowTitle('Output Info')
@@ -276,12 +277,12 @@ class InfoDock(QtGui.QDockWidget):
         self.setupUI()
 
     def setupUI(self):
-        infoFrame = QtGui.QFrame()
-        infoLayout = QtGui.QVBoxLayout()
+        infoFrame = QtWidgets.QFrame()
+        infoLayout = QtWidgets.QVBoxLayout()
         infoLayout.setAlignment(QtCore.Qt.AlignTop)
         infoLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.infoDisplay = QtGui.QTextEdit()
+        self.infoDisplay = QtWidgets.QTextEdit()
         self.infoDisplay.setMinimumHeight(50)
         self.infoDisplay.setReadOnly(1)
 

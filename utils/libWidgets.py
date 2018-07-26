@@ -1,25 +1,43 @@
-﻿import qt_handlers as qtHandlers
+﻿from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
 
-reload(qtHandlers)
-
-from qt_handlers import *
+# import qt_handlers as qtHandlers
+# reload(qtHandlers)
+#
+# from qt_handlers import *
 
 MIN_LABEL_WIDTH = 40
 
 
-class ButtonB(qPushButton):
+class ButtonB(QtWidgets.QPushButton):
     def __init__(self, parent=None, index=0):
         super(ButtonB, self).__init__(parent)
         self.setFixedHeight(20)
 
         # self.setStyleSheet("border-top: 3px ;border-bottom: 3px ;border-right: 10px ;border-left:10px;")
 
+class ButtonBack(QtWidgets.QPushButton):
+    def __init__(self, parent, index ):
+        super(ButtonBack, self).__init__(parent)
+        self.setFixedHeight(20)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.index = index
+        self.setStyleSheet("background-color: #4498bf; ")
 
-class BlueprintButton(qPushButton):
+class ActionButton(QtWidgets.QPushButton):
+    def __init__(self, parent):
+        super(ActionButton, self).__init__(parent)
+        self.setFixedHeight(20)
+        # self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.setStyleSheet("background-color: #3ba04d; ")
+
+class BlueprintButton(QtWidgets.QPushButton):
     def __init__(self, parent=None, index=0):
         super(BlueprintButton, self).__init__(parent)
         self.setFixedHeight(17)
         self.index = index
+
 
         color1 = QtGui.QColor(255, 255, 255)
         color2 = QtGui.QColor(255, 0, 0)
@@ -42,7 +60,7 @@ class BlueprintButton(qPushButton):
     backColor = QtCore.Property(QtGui.QColor, getBackColor, setBackColor)
 
 
-class TitledBox(qGroupBox):
+class TitledBox(QtWidgets.QGroupBox):
     def __init__(self, parent=None, title='Title', direction='v'):
         super(TitledBox, self).__init__(parent)
         self.title = title
@@ -65,7 +83,7 @@ class TitledBox(qGroupBox):
         self.setLayout(mainLayout)
 
 
-class LabelEditWidget(qWidget):
+class LabelEditWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label=''):
         super(LabelEditWidget, self).__init__(parent)
         self.labelName = label
@@ -75,15 +93,15 @@ class LabelEditWidget(qWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = qHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
         if self.labelName != '':
-            self.label = qLabel(self.labelName)
+            self.label = QtWidgets.QLabel(self.labelName)
             self.layout.addWidget(self.label)
             self.label.setMinimumWidth(MIN_LABEL_WIDTH)
 
-        self.edit = qLineEdit()
+        self.edit = QtWidgets.QLineEdit()
 
         self.layout.addWidget(self.edit)
 
@@ -91,7 +109,7 @@ class LabelEditWidget(qWidget):
         self.setLayout(mainLayout)
 
 
-class ObjectPickerWidget(qWidget):
+class ObjectPickerWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label=''):
         super(ObjectPickerWidget, self).__init__(parent)
         self.labelTitle = label
@@ -102,15 +120,15 @@ class ObjectPickerWidget(qWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = qHBoxLayout()
+        self.layout = QtWidgets.QHBoxLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
         if self.labelTitle != '':
-            self.label = qLabel(self.labelTitle)
+            self.label = QtWidgets.QLabel(self.labelTitle)
             self.layout.addWidget(self.label)
             self.label.setMinimumWidth(MIN_LABEL_WIDTH)
 
-        self.edit = qLineEdit()
+        self.edit = QtWidgets.QLineEdit()
         self.edit.setReadOnly(1)
 
         self.pickBtn = ButtonB('<<')
@@ -130,7 +148,7 @@ class ObjectPickerWidget(qWidget):
             pm.warning('No transform selected!')
 
 
-class SpinWidget(qWidget):
+class SpinWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label='Number'):
         super(SpinWidget, self).__init__(parent)
         self.labelName = label
@@ -140,11 +158,11 @@ class SpinWidget(qWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = qGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
-        self.label = qLabel(self.labelName)
-        self.spin = qSpinBox()
+        self.label = QtWidgets.QLabel(self.labelName)
+        self.spin = QtWidgets.QSpinBox()
 
         self.layout.addWidget(self.label, 0, 0)
         self.layout.addWidget(self.spin, 0, 1)
@@ -153,7 +171,7 @@ class SpinWidget(qWidget):
         self.setLayout(mainLayout)
 
 
-class FloatSpinWidget(qWidget):
+class FloatSpinWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label='Number'):
         super(FloatSpinWidget, self).__init__(parent)
         self.labelName = label
@@ -163,13 +181,13 @@ class FloatSpinWidget(qWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        self.layout = qGridLayout()
+        self.layout = QtWidgets.QGridLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
-        self.label = qLabel(self.labelName)
+        self.label = QtWidgets.QLabel(self.labelName)
         self.label.setMinimumWidth(MIN_LABEL_WIDTH)
 
-        self.spin = qDoubleSpinBox()
+        self.spin = QtWidgets.QDoubleSpinBox()
         self.spin.setMinimumWidth(100)
 
         self.layout.addWidget(self.label, 0, 0)
@@ -179,7 +197,7 @@ class FloatSpinWidget(qWidget):
         self.setLayout(mainLayout)
 
 
-class LabelComboWidget(qWidget):
+class LabelComboWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label='Label', validator=None):
         super(LabelComboWidget, self).__init__(parent)
         self.labelName = label
@@ -188,12 +206,12 @@ class LabelComboWidget(qWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        layout = qGridLayout()
+        layout = QtWidgets.QGridLayout()
         layout.setColumnStretch(1, 1)
 
-        self.label = qLabel(self.labelName)
+        self.label = QtWidgets.QLabel(self.labelName)
         self.label.setMinimumWidth(MIN_LABEL_WIDTH)
-        self.combo = qComboBox()
+        self.combo = QtWidgets.QComboBox()
 
         layout.addWidget(self.label, 0, 0)
         layout.addWidget(self.combo, 0, 1)
@@ -202,7 +220,7 @@ class LabelComboWidget(qWidget):
         self.setLayout(mainLayout)
 
 
-class VertBox(qVBoxLayout):
+class VertBox(QtWidgets.QVBoxLayout):
     def __init__(self, *args, **kargs):
         super(VertBox, self).__init__(*args, **kargs)
         self.setSpacing(3)
@@ -210,14 +228,14 @@ class VertBox(qVBoxLayout):
         self.setContentsMargins(0, 0, 0, 0)
 
 
-class HorBox(qHBoxLayout):
+class HorBox(QtWidgets.QHBoxLayout):
     def __init__(self, *args, **kargs):
         super(HorBox, self).__init__(*args, **kargs)
         self.setSpacing(3)
         self.setContentsMargins(0, 0, 0, 0)
 
 
-class Separator(qWidget):
+class Separator(QtWidgets.QWidget):
     def __init__(self, parent=None, d=0):
         super(Separator, self).__init__(parent)
         self.direction = d
@@ -226,10 +244,10 @@ class Separator(qWidget):
     def setupUI(self):
         mainLayout = HorBox()
 
-        separator = qFrame()
-        separator.setFrameShape(qFrame.HLine)
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
         if self.direction:
-            separator.setFrameShape(qFrame.VLine)
+            separator.setFrameShape(QtWidgets.QFrame.VLine)
 
         separator.setLineWidth(0.5)
         separator.setContentsMargins(0, 0, 0, 0)
@@ -238,8 +256,8 @@ class Separator(qWidget):
         self.setLayout(mainLayout)
 
 
-class TitleBar(qWidget):
-    def __init__(self, parent=None, title='', height=12, color=(0, 28, 36)):
+class TitleBar(QtWidgets.QWidget):
+    def __init__(self, parent=None, title='', height=12, color=(120, 28, 36)):
         super(TitleBar, self).__init__(parent)
         self.title = title
         self.height = height
@@ -249,13 +267,13 @@ class TitleBar(qWidget):
     def setupUI(self):
         mainLayout = VertBox()
 
-        titleFrame = qFrame()
-        titleFrame.setFrameStyle(qFrame.Panel | qFrame.Raised)
+        titleFrame = QtWidgets.QFrame()
+        titleFrame.setFrameStyle(QtWidgets.QFrame.Panel | QtWidgets.QFrame.Raised)
         titleFrame.setStyleSheet("QFrame { background-color : rgba" + self.color + "; color : white; }")
 
-        titleLayout = qHBoxLayout()
+        titleLayout = QtWidgets.QHBoxLayout()
         titleLayout.setContentsMargins(0, 0, 0, 0)
-        self.label = qLabel(self.title)
+        self.label = QtWidgets.QLabel(self.title)
         self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.label.setFixedHeight(self.height)
 
@@ -268,7 +286,7 @@ class TitleBar(qWidget):
         self.setLayout(mainLayout)
 
 
-class CharNameValidator(qValidator):
+class CharNameValidator(QtGui.QValidator):
     def __init__(self, parent=None):
         super(CharNameValidator, self).__init__(parent)
 
@@ -279,12 +297,12 @@ class CharNameValidator(qValidator):
         import string
         allowed_chars = string.ascii_letters + string.digits + "_"
         if all([c in allowed_chars for c in input]):
-            return qValidator.Acceptable
+            return QtGui.QValidator.Acceptable
         else:
-            return qValidator.Invalid
+            return QtGui.QValidator.Invalid
 
 
-class InfoDock(qDockWidget):
+class InfoDock(QtWidgets.QDockWidget):
     def __init__(self, parent=None):
         super(InfoDock, self).__init__(parent)
         self.setWindowTitle('Output Info')
@@ -293,12 +311,12 @@ class InfoDock(qDockWidget):
         self.setupUI()
 
     def setupUI(self):
-        infoFrame = qFrame()
-        infoLayout = qVBoxLayout()
+        infoFrame = QtWidgets.QFrame()
+        infoLayout = QtWidgets.QVBoxLayout()
         infoLayout.setAlignment(QtCore.Qt.AlignTop)
         infoLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.infoDisplay = qTextEdit()
+        self.infoDisplay = QtWidgets.QTextEdit()
         self.infoDisplay.setMinimumHeight(50)
         self.infoDisplay.setReadOnly(1)
 

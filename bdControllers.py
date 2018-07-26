@@ -162,14 +162,22 @@ class ControllerUI(qt_handlers.qMainWindow):
 
     def getShapeInfo(self, shape):
         name = shape.name()
-        cvNum = shape.numCVs()
-        cvPos = []
+        # cvNum = shape.numCVs()
+        # cvPos = []
 
-        for i in range(cvNum):
-            pos = pm.xform(shape.name() + '.cv[' + str(i) + ']', q=1, t=1, ws=1)
-            cvPos.append(pos)
+        # numCtrlPoints = pm.getAttr(name + '.contrlPoints')
+        # USE CONTROL POINTS IN CASE ITS NEEDED FOR PERIODIC CURVES
+        points = []
+        for i in range(pm.getAttr(name + ".controlPoints", s=1)):
+            pointPos = pm.getAttr(name + ".controlPoints[%i]" % i)
+            pointPos = [round(v, 2) for v in pointPos]
+            points.append(pointPos)
 
-        self.shapeInfoDict['shapes'] = [{'shapeName': name, 'cvsPos': cvPos}]
+        # for i in range(cvNum):
+        #     pos = pm.xform(shape.name() + '.cv[' + str(i) + ']', q=1, t=1, ws=1)
+        #     cvPos.append(pos)
+
+        self.shapeInfoDict['shapes'] = [{'shapeName': name, 'cvsPos': points}]
 
     def importShape(self):
         print self.ctrlLibFolder

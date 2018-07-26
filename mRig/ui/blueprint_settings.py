@@ -1,14 +1,15 @@
-from ..utils.qt_handlers import QtCore, QtGui
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
 
 from ..utils import libWidgets as UI
-
 reload(UI)
 
 
 # import pymel.core as pm
 
 
-class BlueprintSettingsWidget(QtGui.QWidget):
+class BlueprintSettingsWidget(QtWidgets.QWidget):
     TYPE = 'blueprint'
 
     def __init__(self, parent=None, blueprintType=''):

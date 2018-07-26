@@ -1,15 +1,15 @@
-from ..utils.qt_handlers import QtCore, QtGui
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
 
 from ..utils import libWidgets as UI
-
 reload(UI)
 
 from .. import mRigGlobals as MRIGLOBALS
-
 reload(MRIGLOBALS)
 
 
-class CharSettingsWidget(QtGui.QWidget):
+class CharSettingsWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(CharSettingsWidget, self).__init__(parent)
         self.titleBar = None

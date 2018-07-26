@@ -1,7 +1,8 @@
 ﻿import pymel.core as pm
 import json, os, random, re
+import traceback
+from functools import wraps
 
-import mayaDecorators as decorators
 
 import pymel.core.datatypes as dt
 import maya.OpenMaya as OpenMaya
@@ -9,6 +10,23 @@ from maya import OpenMaya
 
 shapesFolder = 'd:\\bogdan\\shapes'
 
+def undoable(function):
+    '''A decorator that will make commands undoable in maya'''
+    @wraps(function)
+    def decoratorCode(*args, **kwargs):
+        pm.undoInfo(openChunk=True)
+        functionReturn = None
+        try:
+            functionReturn = function(*args, **kwargs)
+            pm.undoInfo(closeChunk=True)
+        except:
+            pm.undoInfo(closeChunk=True)
+            print(traceback.format_exc())
+
+            #	throw the actual error
+            pm.error()
+
+    return decoratorCode
 
 def bdGetNumJnt():
     '''
@@ -49,6 +67,10 @@ def bdJointOnCurveFromEdge(baseName, center=0):
 
 
 def bdJointToLocAim():
+    '''
+    Category: Joint
+    :return:
+    '''
     jntList = pm.ls(sl=1, type='joint')
     for jnt in jntList:
         loc = pm.spaceLocator(name=jnt.name().replace('jnt', 'loc'))
@@ -302,41 +324,47 @@ def bdBuildSplineSolverScale():
             mdJntTr.outputX.connect(jnt.translateX)
 
 
-def bdCreateRemapValue():
+# def bdCreateRemapValue():
+#     '''
+#     Category: Nodes
+#     '''
+#     selection = pm.ls(sl=1)
+#     if selection:
+#         for obj in selection:
+#             rvNode = pm.shadingNode('remapValue', name=obj.name() + '_rv', asUtility=1)
+#             rvNode.inputMax.set(10)
+#             obj.attr('Dynamics') >> rvNode.inputValue
+
+@undoable
+def bdCreateFolSnp():
     '''
-    Category: Nodes
+    Category: Snappers
     '''
     selection = pm.ls(sl=1)
+    last_flc = max(
+        [int(token.getParent().name().split('_')[-1]) for token in pm.ls('head_snappers_flc_*', type='follicle')])
     if selection:
-        for obj in selection:
-            rvNode = pm.shadingNode('remapValue', name=obj.name() + '_rv', asUtility=1)
-            rvNode.inputMax.set(10)
-            obj.attr('Dynamics') >> rvNode.inputValue
+        for vtx in selection:
+            last_flc += 1
+            shapeStr = vtx.name().split('.')[0]
+            shape = pm.ls(shapeStr)[0]
 
+            flcShape = pm.createNode('follicle', name='head_snappers_flc_'+ str(last_flc) +'Shape')
+            flcTransform = flcShape.getParent()
+            # flcTransform.rename('head_snappers_flc_')
 
-def bdCreateFol():
-    '''
-    Category: Rig
-    '''
-    selection = pm.ls(sl=1)
-    if selection:
-        vtx = selection[0]
-        shapeStr = vtx.name().split('.')[0]
-        shape = pm.ls(shapeStr)[0]
+            shape.outMesh.connect(flcShape.inputMesh)
+            shape.worldMatrix[0].connect(flcShape.inputWorldMatrix)
 
-        flcShape = pm.createNode('follicle', name=shape.name() + 'FLCShape')
-        flcTransform = flcShape.getParent()
-        flcTransform.rename(shape.name() + '_flc')
+            flcShape.outRotate.connect(flcTransform.rotate)
+            flcShape.outTranslate.connect(flcTransform.translate)
 
-        shape.outMesh.connect(flcShape.inputMesh)
-        shape.worldMatrix[0].connect(flcShape.inputWorldMatrix)
+            uvPos = vtx.getUV(uvSet=shape.getCurrentUVSetName())
+            uv = pm.polyListComponentConversion(vtx, tuv=True)[0]
+            u, v = pm.polyEditUV(uv, q=1)
 
-        flcShape.outRotate.connect(flcTransform.rotate)
-        flcShape.outTranslate.connect(flcTransform.translate)
-
-        uvPos = vtx.getUV()
-        flcShape.parameterU.set(uvPos[0])
-        flcShape.parameterV.set(uvPos[1])
+            flcShape.parameterU.set(u)
+            flcShape.parameterV.set(v)
 
 
 def bdJointOnSelCenter():
@@ -681,14 +709,14 @@ def bdLocOnVertex():
                 vtx = selection[i]
                 loc = pm.spaceLocator()
                 pointCnstr = pm.pointOnPolyConstraint(vtx, loc)
-                uv = vtx.getUV()
-                attrs = pm.listAttr(pointCnstr, ud=1)
-                pointCnstr.attr(attrs[1]).set(uv[0])
-                pointCnstr.attr(attrs[2]).set(uv[1])
-                locators.append(loc)
-            if len(selection) > 1:
-                drvLoc = pm.spaceLocator(name='drvLoc')
-                pm.parentConstraint(locators, drvLoc, mo=0)
+                # uv = vtx.getUV()
+                # attrs = pm.listAttr(pointCnstr, ud=1)
+                # pointCnstr.attr(attrs[1]).set(uv[0])
+                # pointCnstr.attr(attrs[2]).set(uv[1])
+                # locators.append(loc)
+            # if len(selection) > 1:
+            #     drvLoc = pm.spaceLocator(name='drvLoc')
+            #     pm.parentConstraint(locators, drvLoc, mo=0)
 
 
 def bdParentSelected():
@@ -798,3 +826,123 @@ def bdAddDistanceBetween():
 
         source2.worldMatrix[0] >> dbNode.inMatrix2
         source2.rotatePivotTranslate >> dbNode.point2
+
+
+
+def bdCreateMulDiv(src, src_attr, dest, dest_attr):
+    md_node = pm.shadingNode('multDoubleLinear', asUtility=1, name = dest.name() + '_' + dest_attr + '_mdl')
+    src.attr(src_attr) >> md_node.input1
+    md_node.output >> dest.attr(dest_attr)
+
+def bdCreateRemapValue(src, src_attr, dest, dest_attr):
+    rv_node = pm.shadingNode('remapValue', asUtility=1, name = dest.name() + '_' + dest_attr + '_rv')
+    src.attr(src_attr) >> rv_node.inputValue
+    rv_node.outValue >> dest.attr(dest_attr)
+
+
+def bdJntGrp():
+    '''
+    Category: Snappers
+    '''
+    selection = pm.ls(sl=1)
+
+    i=0
+    if selection:
+        for flc in selection:
+            pm.select(cl=1)
+            loc = pm.spaceLocator(name=flc.name().replace('flc', 'loc'))
+            grp = pm.group(name=flc.name() + '_grp')
+            pm.parent(grp,flc)
+            grp.setTranslation([0,0,0])
+            grp.setRotation([0, 0, 0])
+            jnt = pm.joint(name= flc.name().replace('flc', 'jnt_snp'))
+            jnt.radius.set(0.2)
+            pm.parent(jnt,loc)
+            jnt.t.set([0,0,0])
+            jnt.r.set([0, 0, 0])
+            i+=1
+
+# @undoable
+# def bdJntLocGrp():
+#     '''
+#     Category: Snappers
+#     '''
+#     selection = pm.ls(sl=1)
+#     if selection:
+#         for jnt in selection:
+#             pm.select(cl=1)
+#             loc = pm.spaceLocator(name=jnt.name() + '_loc')
+#             grp = pm.group(name=jnt.name() + '_grp')
+#             pm.parentConstraint(jnt, grp, mo=0)
+#             pm.parentConstraint(jnt, grp, remove=1)
+#             pm.parent(jnt,loc)
+
+
+
+@undoable
+def bdMirrorJntLocGrp():
+    '''
+    Category: Snappers
+    '''
+    selection = pm.ls(sl=1)
+    if selection:
+        for grp in selection:
+            pm.select(cl=1)
+            if '_c_' not in grp.name():
+                mirrored = pm.duplicate(grp, name=grp.replace('_l_', '_r_'))[0]
+                pos = grp.getTranslation()
+                mirrored.setTranslation([pos.x * -1.0, pos.y, pos.z])
+                children = pm.listRelatives(mirrored, type='transform', ad=1)
+                for child in children:
+                    pm.rename(child, child.name().replace('_l_', '_r_'))
+                    if '_loc' in child.name():
+                        ry = child.rotateY.get()
+                        child.rotateY.set(-1.0 * ry)
+
+
+@undoable
+def bdCreateBnd():
+    '''
+    Category: Snappers
+    '''
+    selection = pm.ls(sl=1)
+    if selection:
+        for grp in selection:
+            pm.select(cl=1)
+            children = pm.listRelatives(grp, type='joint', ad=1)
+            if children:
+                anim_jnt = children[0]
+                dup = pm.duplicate(anim_jnt, name = anim_jnt.name().replace('anim_', ''))
+                pm.parent(dup[0], w=1)
+                pm.parentConstraint(anim_jnt, dup[0])
+
+@undoable
+def bdCreateFol():
+    '''
+    Category: Rig
+    '''
+    selection = pm.ls(sl=1, fl=1)
+    if selection:
+        for vtx in selection:
+            shapeStr = vtx.name().split('.')[0]
+            shape = pm.ls(shapeStr)[0]
+
+            flcShape = pm.createNode('follicle')
+            flcTransform = flcShape.getParent()
+            # flcTransform.rename('head_snappers_flc_')
+
+            shape.outMesh.connect(flcShape.inputMesh)
+            shape.worldMatrix[0].connect(flcShape.inputWorldMatrix)
+
+            flcShape.outRotate.connect(flcTransform.rotate)
+            flcShape.outTranslate.connect(flcTransform.translate)
+
+            uv_m = pm.polyListComponentConversion(vtx, tuv=True)[0]
+            uv = pm.ls(uv_m, fl=1)[0]
+            try:
+                u, v = pm.polyEditUV(uv, q=1)
+            except:
+                pm.warning('Total fail')
+
+            flcShape.parameterU.set(u)
+            flcShape.parameterV.set(v)

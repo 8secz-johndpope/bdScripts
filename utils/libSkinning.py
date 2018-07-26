@@ -4,7 +4,8 @@ import json, os, random, re
 import mayaDecorators as decorators
 
 import pymel.core.datatypes as dt
-import maya.OpenMaya as OpenMaya
+import maya.api.OpenMaya as om
+
 
 
 def bdSelectSkinJnt():
@@ -42,7 +43,7 @@ def bdSetBindPose():
                     strPoses += (p.name() + ' ')
                 return '%s has already the following bind pose(s): %s' % (skRoot.name(), strPoses)
             else:
-                bindPose = pm.dagPose(skRoot, save=Tru, bp=1)
+                bindPose = pm.dagPose(skRoot, save=True, bp=1)
         else:
             return 'No selection and no Skeleton_Root found !!!'
 
@@ -122,3 +123,21 @@ def getVertexWeight():
                 tvList.append((influences[i], normWeights[i]))
 
             pm.skinPercent(skinCls, vtx[1], transformValue=tvList)
+
+
+def labelJoints():
+    '''
+    Category: Skinning
+    Labels the joints based on their name
+    '''
+    for jnt in pm.ls(sl=1):
+        jnt.attr("type").set(18)
+        if 'l_' in jnt.name():
+            jnt.attr("side").set(1)
+            jnt.attr("otherType").set(jnt.name()[2:])
+        elif 'r_' in jnt.name():
+            jnt.attr("side").set(2)
+            jnt.attr("otherType").set(jnt.name()[2:])
+        else:
+            jnt.attr("side").set(0)
+            jnt.attr("otherType").set(jnt.name())

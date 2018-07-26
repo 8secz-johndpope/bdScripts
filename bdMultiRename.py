@@ -3,47 +3,48 @@ import traceback
 import os
 import inspect
 import re
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
+import maya.OpenMayaUI as mui
+import shiboken2
 
 import utils.libWidgets as UI
-
 reload(UI)
 
-import utils.qt_handlers as qtHandlers
-
-reload(qtHandlers)
-
-from utils.qt_handlers import *
 
 
-class bdRenameUI(qMainWindow):
-    def __init__(self, parent=qtHandlers.get_maya_window()):
-        global mrWin
-        if 'mrWin' in globals():
-            mrWin.close()
+def getMayaWindow():
+    pointer = mui.MQtUtil.mainWindow()
+    return shiboken2.wrapInstance(long(pointer), QtWidgets.QWidget)
 
-        super(bdRenameUI, self).__init__(parent)
+
+mrWin = 'multiRenameWin'
+
+class MultiRenameUI(QtWidgets.QMainWindow):
+    def __init__(self, parent=getMayaWindow()):
+
+        super(MultiRenameUI, self).__init__(parent)
         self.setWindowTitle('Bd Tools 0.1')
+        self.setObjectName(mrWin)
         self.setupUI()
 
-        mrWin = self
-        self.show()
-        self.resize(300, 300)
 
     def setupUI(self):
-        centralWidget = qWidget()
-        mainLayout = qVBoxLayout()
+        centralWidget = QtWidgets.QWidget()
+        mainLayout = QtWidgets.QVBoxLayout()
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
 
         #
-        self.renameWidget = qWidget()
+        self.renameWidget = QtWidgets.QWidget()
         self.addRenameUI()
 
         #
-        self.searchReplaceWidget = qWidget()
+        self.searchReplaceWidget = QtWidgets.QWidget()
         self.addSearchReplaceUI()
 
         #
-        self.prefixSufixWidget = qWidget()
+        self.prefixSufixWidget = QtWidgets.QWidget()
         self.addPrefixSufixUI()
 
         #
@@ -76,7 +77,7 @@ class bdRenameUI(qMainWindow):
         self.startCount.spin.setMinimum(0)
         self.startCount.spin.setValue(1)
 
-        self.renameBtn = qPushButton('Rename')
+        self.renameBtn = QtWidgets.QPushButton('Rename')
         self.renameBtn.clicked.connect(self.rename)
 
         self.renameBox.layout.addWidget(self.renameMask)
@@ -94,7 +95,7 @@ class bdRenameUI(qMainWindow):
         self.search = UI.LabelEditWidget(label='Search')
         self.replace = UI.LabelEditWidget(label='Replace')
 
-        self.searchReplaceBtn = qPushButton('Search and Replace')
+        self.searchReplaceBtn = QtWidgets.QPushButton('Search and Replace')
         self.searchReplaceBtn.clicked.connect(self.searchReplace)
 
         self.searchReplaceBox.layout.addWidget(self.search)
@@ -112,7 +113,7 @@ class bdRenameUI(qMainWindow):
         self.prefix = UI.LabelEditWidget(label='Prefix')
         self.sufix = UI.LabelEditWidget(label='Sufix')
 
-        self.prefixSufixBtn = qPushButton('Add Prefix / Sufix')
+        self.prefixSufixBtn = QtWidgets.QPushButton('Add Prefix / Sufix')
         self.prefixSufixBtn.clicked.connect(self.addPrefixSufix)
 
         self.prefixSufixBox.layout.addWidget(self.prefix)
@@ -236,3 +237,14 @@ class bdRenameUI(qMainWindow):
             self.infoDock.infoDisplay.append('Nothing Selected')
             pm.warning('Nothing selected!')
         pm.undoInfo(closeChunk=True)
+
+
+def openTool():
+    if pm.window(mrWin, exists=True, q=True):
+        pm.deleteUI(mrWin)
+
+    tool = MultiRenameUI()
+    tool.show()
+    tool.resize(300, 300)
+
+
