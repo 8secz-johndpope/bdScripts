@@ -6,10 +6,9 @@ import os
 class Controller(object):
     def __init__(self, *args, **kargs):
         self.ctrlName = kargs.setdefault('ctrlName', '')
-        self.target = kargs.setdefault('target', '')
         self.scale = kargs.setdefault('scale', 3)
         self.ctrlType = kargs.setdefault('ctrlType', 'circle')
-        self.ctrlPos = kargs.setdefault('ctrlPos', [0, 0, 0])
+        self.ctrlPos = None
 
     def buildController(self):
         if self.ctrlName == '':
@@ -28,13 +27,12 @@ class Controller(object):
         for p in defaultPointsList:
             pointsList.append((p[0] * self.scale, p[1] * self.scale, p[2] * self.scale))
 
-        knotsList = [i for i in range(16)]
         curvePoints = [pointsList[0], pointsList[1], pointsList[2], pointsList[3],
                        pointsList[7], pointsList[4], pointsList[5], pointsList[6],
                        pointsList[7], pointsList[3], pointsList[0], pointsList[4],
                        pointsList[5], pointsList[1], pointsList[2], pointsList[6]]
 
-        ctrl = pm.curve(d=1, p=curvePoints, k=knotsList)
+        ctrl = pm.curve(d=1, p=curvePoints)
         ctrl = pm.rename(ctrl, self.ctrlName)
         ctrlGrp = pm.group(ctrl, n=str(self.ctrlName + '_grp'))
 
@@ -58,3 +56,12 @@ class Controller(object):
         pm.move(ctrlGrp, self.ctrlPos[0], self.ctrlPos[1], self.ctrlPos[2])
 
         return ctrl.name()
+
+    def movePivot(self, target):
+        pass
+
+    def moveCtrl(self, pos):
+        pass
+
+    def alignCtrl(self, target):
+        pass

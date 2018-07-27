@@ -4,7 +4,7 @@ from ..utils import libCtrl as controller
 
 reload(controller)
 
-import rigNode as RN
+import base_rig as RN
 
 reload(RN)
 
