@@ -54,3 +54,20 @@ def undoable(function):
             pm.error()
 
     return decoratorCode
+
+
+def join_name(l):
+    return '_'.join(l)
+
+
+def set_bnd(bnd):
+    temp = []
+    for jnt in bnd:
+        find = pm.ls(jnt)
+        if find:
+            temp.append(find[0])
+        else:
+            pm.warning('Bind joint {} not found'.format(jnt))
+            return None
+
+    return temp[:]

@@ -5,22 +5,22 @@ import os
 
 class Controller(object):
     def __init__(self, *args, **kargs):
-        self.ctrlName = kargs.setdefault('ctrlName', '')
+        self.name = kargs.setdefault('name', '')
         self.scale = kargs.setdefault('scale', 3)
-        self.ctrlType = kargs.setdefault('ctrlType', 'circle')
-        self.ctrlPos = None
+        self.look = kargs.setdefault('look', 'circle')
+        self.target = kargs.setdefault('target', None)
 
-    def buildController(self):
-        if self.ctrlName == '':
-            pm.warning('No name or target specified for building the controller')
+    def create(self):
+        if self.name == '':
+            pm.warning('No name or target specified for createing the controller')
             return
 
-        if self.ctrlType == 'circle':
-            return self.buildCircleController()
-        elif self.ctrlType == 'box':
-            return self.buildBoxController()
+        if self.look == 'circle':
+            return self.circle_ctrl()
+        elif self.look == 'box':
+            return self.box_ctrl()
 
-    def buildBoxController(self):
+    def box_ctrl(self):
         defaultPointsList = [(1, -1, 1), (1, -1, -1), (-1, -1, -1), (-1, -1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1),
                              (-1, 1, 1)]
         pointsList = []
@@ -33,29 +33,31 @@ class Controller(object):
                        pointsList[5], pointsList[1], pointsList[2], pointsList[6]]
 
         ctrl = pm.curve(d=1, p=curvePoints)
-        ctrl = pm.rename(ctrl, self.ctrlName)
-        ctrlGrp = pm.group(ctrl, n=str(self.ctrlName + '_grp'))
+        ctrl = pm.rename(ctrl, self.name)
+        ctrl_grp = pm.group(ctrl, n=str(self.name + '_grp'))
 
         # pm.addAttr(ctrl,ln='parent',at='message')
         # pm.connectAttr(ctrlGrp.name() + '.message' , ctrl.name() + '.parent')
 
-        pm.move(ctrlGrp, self.ctrlPos[0], self.ctrlPos[1], self.ctrlPos[2])
+        if self.target:
+            pos = self.target.getTranslation(space='world')
+            ctrl_grp.setTranslation(pos, space='world')
 
-        return ctrl.name()
+        return ctrl, ctrl_grp
 
-    def buildCircleController(self):
+    def circle_ctrl(self):
         pm.select(cl=1)
-        ctrl = pm.circle(name=self.ctrlName, c=[0, 0, 0], nr=[0, 1, 0], ch=0, radius=self.scale)[0]
-        ctrlGrp = pm.group(ctrl, n=str(self.ctrlName + '_grp'))
-
+        ctrl = pm.circle(name=self.name, c=[0, 0, 0], nr=[0, 1, 0], ch=0, radius=self.scale)[0]
+        ctrl_grp = pm.group(ctrl, n=str(self.name + '_grp'))
         # pm.addAttr(ctrl,ln='parent',at='message')
         # pm.connectAttr(ctrlGrp.name() + '.message' , ctrl.name() + '.parent')
-
         pm.select(cl=1)
+        if self.target:
+            pos = self.target.getTranslation(space='world')
+            ctrl_grp.setTranslation(pos, space='world')
 
-        pm.move(ctrlGrp, self.ctrlPos[0], self.ctrlPos[1], self.ctrlPos[2])
+        return ctrl, ctrl_grp
 
-        return ctrl.name()
 
     def movePivot(self, target):
         pass

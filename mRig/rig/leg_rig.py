@@ -9,7 +9,7 @@ class LegRig(rn.Rig):
         self.parent = None
 
     def rig(self):
-        self.rig_joints = self.create_chain(self.rig_prefix, bnd=1)
+        super(LegRig, self).rig()
         self.rig_fk()
         self.rig_ik()
         self.connect()
