@@ -27,6 +27,7 @@ class SpineRig(base.Rig):
         self.hip = None
         self.ik_handle = None
         self.ik_crv = None
+        self.ik_drv_crv = None
         self.clusters = []
         self.ikFkSwitchCtrl = None
     # -----------------------------
@@ -60,6 +61,7 @@ class SpineRig(base.Rig):
 
         self.ik_crv = pm.curve(n='spine_ikSpline_crv', d=1, p=points)
 
+
         self.ik_handle= pm.ikHandle(sj=self.ik_joints[0], ee=self.ik_joints[-1], c=self.ik_crv, ccv=False,
                                          sol='ikSplineSolver', name='spine_ikSpline')[0]
 
@@ -67,16 +69,30 @@ class SpineRig(base.Rig):
         pm.parent(self.ik_handle, self.rig_grp)
 
     def create_ik_ctrl(self):
-        for i, jnt in enumerate(self.rig_joints):
-            ctrl_node = libCtrl.Controller(name='spine_' + str(i+1) + '_ik_ctrl', target=jnt, scale = 20)
+        mid = int(len(self.rig_joints)/2)
+        end = len(self.rig_joints) - 1
+        for i in [0, mid, end]:
+            ctrl_node = libCtrl.Controller(name='spine_' + str(i+1) + '_ik_ctrl', target=self.rig_joints[i], look='box')
             ctrl, ctrl_grp = ctrl_node.create()
+            if i == mid:
+                ctrl_node.resize([5, 0.5, 5])
+            else:
+                ctrl_node.resize([6, 1, 6])
             self.ik_ctrls.append(ctrl)
             pm.parent(ctrl_grp, self.ik_ctrl_grp)
 
     def create_clusters(self):
-        crv_shape = self.ik_crv.getShape()
-        for i in range(crv_shape.numCVs()):
-            cluster = pm.cluster(crv_shape.cv[i])
+
+        self.ik_drv_crv = pm.rebuildCurve(self.ik_crv, ch=1, rpo=0, rt=0, end=1, kr=2, kcp=0, kep=1, kt=0, s=2, d=3,
+                                          tol=0.01, name = self.ik_crv.name().replace('crv', 'drv_crv'))[0]
+        pm.delete(self.ik_drv_crv, ch=1)
+        wire_def = pm.wire(self.ik_crv, w=self.ik_drv_crv, en=1, gw=False, ce=0, li=0, dds=[(0, 20)],
+                n=self.ik_crv.name() + '_wire')
+        wire_transform = pm.listConnections((wire_def[0].name() + '.baseWire[0]'))[0]
+        pm.parent(self.ik_drv_crv, self.rig_grp)
+        pm.parent(wire_transform , self.rig_grp)
+        for i, cv in enumerate(['.cv[0:1]', '.cv[2]', '.cv[3:4]']):
+            cluster = pm.cluster(self.ik_drv_crv.name() + cv)
             name = join_name([self.ik_crv.name(), 'cls', str(i)])
             cluster[1].rename(name)
             cluster[1].attr('v').set(0)

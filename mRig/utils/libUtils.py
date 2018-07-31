@@ -71,3 +71,18 @@ def set_bnd(bnd):
             return None
 
     return temp[:]
+
+def obj_from_name(name):
+    find = pm.ls(name)
+    if find:
+        return find[0]
+
+    return None
+
+
+def prefix_chain(start, prefix):
+    all = pm.listRelatives(start, ad=1, type='joint')
+    for jnt in all:
+        new_name = join_name([prefix, jnt.nodeName()])
+        jnt.rename(new_name)
+

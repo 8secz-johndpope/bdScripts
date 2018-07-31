@@ -62,8 +62,12 @@ class Controller(object):
     def movePivot(self, target):
         pass
 
-    def moveCtrl(self, pos):
+    def moveTo(self, pos):
         pass
 
-    def alignCtrl(self, target):
+    def alignTo(self, target):
         pass
+
+    def resize(self, factor):
+        pm.scale(self.name, factor)
+        # pm.makeIdentity(self.name, scale=True)

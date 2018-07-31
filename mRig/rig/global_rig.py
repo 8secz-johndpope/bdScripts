@@ -8,7 +8,7 @@ reload(base)
 
 import bdScripts.mRig.utils.libUtils as utils
 reload(utils)
-from bdScripts.mRig.utils.libUtils import (join_name)
+from bdScripts.mRig.utils.libUtils import (join_name, obj_from_name, prefix_chain)
 
 # ------- Global suffixes ------
 BND = base.BND
@@ -24,15 +24,20 @@ GRP = base.GRP
 
 
 class GlobalRig():
-    def __init__(self, name = ''):
+    def __init__(self, name = '', root=''):
         self.name = name
         self.top_grp = None
+        self.root_jnt = obj_from_name(root)
+        self.rig_joints = []
         self.controllers_grp = None
         self.joints_grp = None
         self.geometry_grp = None
         self.subrig_grp = None
         self.rigs = []
+
+    def create(self):
         self.create_groups()
+        self.create_rig_joints()
 
     def create_groups(self):
         pm.select(cl=1)
@@ -53,6 +58,11 @@ class GlobalRig():
         pm.parent(rig.controllers_grp, self.controllers_grp)
         pm.parent(rig.rig_grp, self.subrig_grp)
 
+
+    def create_rig_joints(self):
+        if self.root_jnt:
+            dup_root = pm.duplicate(self.root_jnt, name=join_name([RIG, self.root_jnt.name()]))[0]
+            prefix_chain(dup_root, RIG)
 
 
 
