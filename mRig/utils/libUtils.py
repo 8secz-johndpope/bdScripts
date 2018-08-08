@@ -56,8 +56,8 @@ def undoable(function):
     return decoratorCode
 
 
-def join_name(l):
-    return '_'.join(l)
+def join_name(*names):
+    return '_'.join(names)
 
 
 def set_bnd(bnd):
