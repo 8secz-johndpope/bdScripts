@@ -4,12 +4,20 @@ import os
 import utils.utils as utils
 
 
-import utils.qt_handlers as qt_handlers
-from utils.qt_handlers import QtCore, QtGui
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from PySide2 import QtGui
 
+from functools import partial
+import maya.OpenMayaUI as mui
+import shiboken2
 
-import utils.ui_utils as ui_utils
-reload(ui_utils)
+import utils.libWidgets as UI
+reload(UI)
+
+def getMayaWindow():
+    pointer = mui.MQtUtil.mainWindow()
+    return shiboken2.wrapInstance(long(pointer), QtWidgets.QWidget)
 
 skeletonPoseWin = 'skeletonPoseWin'
 
@@ -20,37 +28,29 @@ class SkeletonPose(object):
         self.translate = kargs.setdefault('translate',0)
         self.rotate = kargs.setdefault('rotate',0)
         self.scale = kargs.setdefault('scale',0)
-        
+
         self.poseData = {}
         self.skeletonGroup = None
         self.poseFile = ''
-        self.getSkeletonGroup()
 
-        
-    def getSkeletonGroup(self):
-        search = pm.ls('skeleton')
-        if search:
-            self.skeletonGroup = search[0]
-            
     def savePose(self):
         jntList = self.getSelection()
         if jntList:
             self.getPoseData(jntList)
-            if self.skeletonGroup:
-                self.poseFile = self.workFolder + self.poseName + '.txt'
-                print self.poseFile
-                with open (self.poseFile,'w') as outPoseFile:
-                    json.dump(self.poseData,outPoseFile)
-                #if not pm.hasAttr(self.skeletonGroup, self.poseName):
-                    #utils.addStringAttr(self.skeletonGroup, self.poseName, poseInfo)
-                    #pm.setAttr(self.skeletonGroup.name() + '.' + self.poseName,e=1,lock=1)
-                #else:
-                    #pm.warning('Pose %s saved already'%self.poseName)
+            self.poseFile = os.path.join(self.workFolder, self.poseName + '.txt')
+            print self.poseFile
+            with open (self.poseFile,'w') as outPoseFile:
+                json.dump(self.poseData,outPoseFile)
+            #if not pm.hasAttr(self.skeletonGroup, self.poseName):
+                #utils.addStringAttr(self.skeletonGroup, self.poseName, poseInfo)
+                #pm.setAttr(self.skeletonGroup.name() + '.' + self.poseName,e=1,lock=1)
+            #else:
+                #pm.warning('Pose %s saved already'%self.poseName)
         else:
             pm.warning('Select joints to save the pose')
                 
     def loadPose(self):
-        self.poseFile = self.workFolder + self.poseName + '.txt'
+        self.poseFile = os.path.join(self.workFolder, self.poseName + '.txt')
         poseData = None
         with open(self.poseFile,'r') as inPoseFile:
             self.poseData= json.load(inPoseFile)
@@ -97,9 +97,9 @@ class SkeletonPose(object):
 
 
 
-class SkeletonPoseUI(QtGui.QMainWindow):
-    def __init__(self,parent=qt_handlers.get_maya_window()):
-        super(SkeletonPoseUI,self).__init__(parent)
+class SkeletonPoseUI(QtWidgets.QMainWindow):
+    def __init__(self, parent=getMayaWindow()):
+        super(SkeletonPoseUI, self).__init__(parent)
         self.setObjectName(skeletonPoseWin)
         self.setWindowTitle('Skeleton Pose')
         
@@ -112,34 +112,34 @@ class SkeletonPoseUI(QtGui.QMainWindow):
         self.resize(300,100)        
     
     def setupUI(self):
-        centralWidget = QtGui.QWidget()
+        centralWidget = QtWidgets.QWidget()
         centralWidget.setMinimumWidth(350)
-        mainLayout = QtGui.QVBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
     
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
-        self.optionsBox = ui_utils.TitledBox(title='Options',settings=0)
-        rowLayout = QtGui.QHBoxLayout()
-        self.checkTranslate = QtGui.QCheckBox('Translate')
+        self.optionsBox = UI.TitledBox(title='Options')
+        rowLayout = QtWidgets.QHBoxLayout()
+        self.checkTranslate = QtWidgets.QCheckBox('Translate')
         self.checkTranslate.toggle()
-        self.checkRotate = QtGui.QCheckBox('Rotate')
+        self.checkRotate = QtWidgets.QCheckBox('Rotate')
         self.checkRotate.toggle()
-        self.checkScale = QtGui.QCheckBox('Scale')
+        self.checkScale = QtWidgets.QCheckBox('Scale')
         self.checkScale.toggle()
         rowLayout.addWidget(self.checkTranslate)
         rowLayout.addWidget(self.checkRotate)
-        rowLayout.addWidget(self.checkScale)
+        # rowLayout.addWidget(self.checkScale)
         
-        self.optionsBox.groupBoxLayout.addLayout(rowLayout)
+        self.optionsBox.layout.addLayout(rowLayout)
+
+        self.btnBox = UI.TitledBox(title='Pose')
         
-        self.btnBox = ui_utils.TitledBox(title='Pose',settings=0)
-        
-        self.btnSave = QtGui.QPushButton('Save')
-        self.btnLoad = QtGui.QPushButton('Load')
-        rowLayout = QtGui.QHBoxLayout()
+        self.btnSave = QtWidgets.QPushButton('Save')
+        self.btnLoad = QtWidgets.QPushButton('Load')
+        rowLayout = QtWidgets.QHBoxLayout()
         rowLayout.addWidget(self.btnSave)
         rowLayout.addWidget(self.btnLoad)
-        self.btnBox.groupBoxLayout.addLayout(rowLayout)
+        self.btnBox.layout.addLayout(rowLayout)
         
         mainLayout.addWidget(self.optionsBox)
         mainLayout.addWidget(self.btnBox)
@@ -153,18 +153,9 @@ class SkeletonPoseUI(QtGui.QMainWindow):
     
     def getWorkFolder(self):
         currentFile = pm.sceneName()
-        workFolder = ''
-        if currentFile:
-            splitPath = currentFile.split('/')
-            i=0
-            for token in splitPath[4:]:
-                if token == 'work':
-                    break
-                i += 1
-            for t in range(i+5):
-                workFolder += (splitPath[t] + '/')
-            
-            self.workFolder = workFolder
+        print currentFile
+        folderPath, currFile = os.path.split(currentFile)
+        self.workFolder = folderPath
         
     def save(self):
         returnString = pm.fileDialog2(dir=self.workFolder,ds=2,fm=0,ff="Filtered Files (*.txt)")
@@ -188,7 +179,7 @@ class SkeletonPoseUI(QtGui.QMainWindow):
             self.skeletonPose.loadPose()
             
 def createUI():
-    if pm.window( skeletonPoseWin, exists = True, q = True ):
-        pm.deleteUI( skeletonPoseWin)
+    if pm.window(skeletonPoseWin, exists = True, q = True ):
+        pm.deleteUI(skeletonPoseWin)
 
     SkeletonPoseUI()

@@ -110,22 +110,55 @@ import pymel.core as pm
 #         return result_vtx
 
 
-def get_vertices():
+def get_vertices(src_mesh_fn, mask_mesh_fn):
+    pairs_vtx = {}
+
+    for i in range(mask_mesh_fn.numVertices):#mask_mesh_fn.getPoints():
+        p = mask_mesh_fn.getPoint(i)
+        (src_p, face_index) = src_mesh_fn.getClosestPoint(p)
+        face_vtx_array = src_mesh_fn.getPolygonVertices(face_index)
+        for j in face_vtx_array:
+            src_point = src_mesh_fn.getPoint(j)
+            if (om.MVector(src_point) - om.MVector(p)).length() <= 0.001:
+                pairs_vtx[i] = j
+
+    return pairs_vtx
+
+
+def select_head_vtx():
     sel_list= om.MGlobal.getActiveSelectionList()
-    result_vtx = []
     if sel_list.length() > 0:
         src_dag_path = sel_list.getDagPath(0)
         mask_dag_path = sel_list.getDagPath(1)
 
         src_mesh_fn = om.MFnMesh(src_dag_path)
         mask_mesh_fn = om.MFnMesh(mask_dag_path)
+        pairs_vtx = get_vertices(src_mesh_fn, mask_mesh_fn)
 
-        for p in mask_mesh_fn.getPoints():
-            (src_p, face_index) = src_mesh_fn.getClosestPoint(p)
-            face_vtx_array = src_mesh_fn.getPolygonVertices(face_index)
-            for i in face_vtx_array:
-                src_point = src_mesh_fn.getPoint(i)
-                if (om.MVector(src_point) - om.MVector(p)).length() <= 0.001:
-                    result_vtx.append(src_mesh_fn.name() + '.vtx[' + str(i) + ']')
+        if pairs_vtx:
+            selection_list = []
+            for head_vtx in pairs_vtx.itervalues():
+                selection_list.append(src_mesh_fn.name() + '.vtx[' + str(head_vtx) + ']')
 
-    return result_vtx
+            pm.select(selection_list)
+
+def adjust_mask(new_head_name):
+    find = pm.ls(new_head_name)
+    if find:
+        new_head_shape = find[0].getShape()
+        print new_head_shape
+
+        sel_list = om.MGlobal.getActiveSelectionList()
+        if sel_list.length() > 0:
+            src_dag_path = sel_list.getDagPath(0)
+            mask_dag_path = sel_list.getDagPath(1)
+
+            src_mesh_fn = om.MFnMesh(src_dag_path)
+            mask_mesh_fn = om.MFnMesh(mask_dag_path)
+            pairs_vtx = get_vertices(src_mesh_fn, mask_mesh_fn)
+
+            for mask_vtx, head_vtx in pairs_vtx.iteritems():
+                pos = om.MPoint(new_head_shape.getPoint(head_vtx, space='world'))
+                mask_mesh_fn.setPoint(int(mask_vtx), pos)
+
+            print pairs_vtx

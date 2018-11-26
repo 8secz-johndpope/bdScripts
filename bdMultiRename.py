@@ -75,6 +75,7 @@ class MultiRenameUI(QtWidgets.QMainWindow):
         self.renameMask = UI.LabelEditWidget(label='Rename Mask')
         self.startCount = UI.SpinWidget(label='Start Count')
         self.startCount.spin.setMinimum(0)
+        self.startCount.spin.setMaximum(9999)
         self.startCount.spin.setValue(1)
 
         self.renameBtn = QtWidgets.QPushButton('Rename')

@@ -617,6 +617,22 @@ def bdConstraintChainsName():
 
     return returnMessage
 
+@undoable
+def bdConstraintToAnim():
+    '''
+    Category: Rig
+    '''
+    selection = pm.ls(sl=1)
+    if selection:
+        for obj in selection:
+            if obj.type() == 'joint':
+                target = obj
+                find = pm.ls('anim_' + target.name())
+                if find:
+                    src = find[0]
+                    pm.parentConstraint(src, target, mo=1)
+
+
 # @decorators.undoable
 def bdConstraintBndToRig():
     '''
@@ -829,10 +845,19 @@ def bdAddDistanceBetween():
 
 
 
-def bdCreateMulDiv(src, src_attr, dest, dest_attr):
-    md_node = pm.shadingNode('multDoubleLinear', asUtility=1, name = dest.name() + '_' + dest_attr + '_mdl')
-    src.attr(src_attr) >> md_node.input1
-    md_node.output >> dest.attr(dest_attr)
+def bdCreateMulDivRot():
+    '''
+    Category: Nodes
+    '''
+    selection = pm.ls(sl=1)
+    if selection and len(selection) == 2:
+        src = selection[0]
+        dest = selection[1]
+
+        md_node = pm.shadingNode('multiplyDivide', asUtility=1, name=dest.name() + '_rot_md')
+        src.attr('rotate') >> md_node.input1
+        md_node.output >> dest.attr('rotate')
+
 
 def bdCreateRemapValue(src, src_attr, dest, dest_attr):
     rv_node = pm.shadingNode('remapValue', asUtility=1, name = dest.name() + '_' + dest_attr + '_rv')
@@ -850,12 +875,12 @@ def bdJntGrp():
     if selection:
         for flc in selection:
             pm.select(cl=1)
-            loc = pm.spaceLocator(name=flc.name().replace('flc', 'loc'))
+            loc = pm.spaceLocator(name=flc.name() +  '_loc')
             grp = pm.group(name=flc.name() + '_grp')
             pm.parent(grp,flc)
             grp.setTranslation([0,0,0])
             grp.setRotation([0, 0, 0])
-            jnt = pm.joint(name= flc.name().replace('flc', 'jnt_snp'))
+            jnt = pm.joint(name= flc.name().replace('flc', 'jnt'))
             jnt.radius.set(0.2)
             pm.parent(jnt,loc)
             jnt.t.set([0,0,0])
@@ -946,3 +971,70 @@ def bdCreateFol():
 
             flcShape.parameterU.set(u)
             flcShape.parameterV.set(v)
+
+
+@undoable
+def bdZeroEndJoint():
+    '''
+    Category: Joint
+    '''
+    selection = pm.ls(sl=1)
+    if selection:
+        for jnt in selection:
+            try:
+                jnt.jointOrient.set([0, 0, 0])
+            except:
+                pm.warning("%s is not a joint"%jnt.name())
+
+
+
+@undoable
+def bdToggleAxis():
+    '''
+    Category: Joint
+    '''
+    selection = pm.ls(sl=1)
+    if selection:
+        for jnt in selection:
+            pm.select(cl=1)
+            try:
+                pm.select(jnt)
+                state = pm.toggle(q=True, localAxis=True)
+                if state == 1:
+                    pm.toggle(state=False, localAxis=True)
+                elif state == 0:
+                    pm.toggle(state=True, localAxis=True)
+            except:
+                pm.warning("%s is not a joint"%jnt.name())
+        pm.select(selection)
+
+
+@undoable
+def bdCopyChainName():
+    '''
+    Category: Joint
+    '''
+    selection = pm.ls(sl=1)
+    print len(selection)
+    if selection:
+        if len(selection) == 2:
+            src_chain = selection[0]
+            tgt_chain = selection[1]
+            src_children = pm.listRelatives(src_chain, ad=1, type='joint')
+            tgt_children = pm.listRelatives(tgt_chain, ad=1, type='joint')
+            if len(src_children) == len(tgt_children):
+                src_names = []
+                src_chain = src_children + [src_chain]
+                for jnt in src_chain:
+                    src_names.append(jnt.name())
+                print src_names
+
+                tgt_chain = tgt_children + [tgt_chain]
+                for i in range(len(tgt_chain)):
+                    tgt_chain[i].rename(src_names[i])
+            else:
+                pm.warning('The two chains have to be identical ')
+        else:
+            pm.warning('Select 2 joint chains !!!')
+    else:
+        pm.warning('Nothing selected')
