@@ -61,10 +61,11 @@ class BlueprintButton(QtWidgets.QPushButton):
 
 
 class TitledBox(QtWidgets.QGroupBox):
-    def __init__(self, parent=None, title='Title', direction='v'):
+    def __init__(self, parent=None, title='Title', direction='v', barHeight = 20):
         super(TitledBox, self).__init__(parent)
         self.title = title
         self.direction = direction
+        self.barHeight = barHeight
         self.setupUI()
 
     def setupUI(self):
@@ -75,13 +76,15 @@ class TitledBox(QtWidgets.QGroupBox):
             self.layout.deleteLater()
             self.layout = HorBox()
 
-        self.titleBar = TitleBar(title=self.title, height=20, color=(0, 161, 114))
+        self.titleBar = TitleBar(title=self.title, height=self.barHeight, color=(0, 161, 114))
 
         mainLayout.addWidget(self.titleBar)
         mainLayout.addLayout(self.layout)
 
         self.setLayout(mainLayout)
 
+    def setTitle(self, title):
+        self.titleBar.setTitle(title)
 
 class LabelEditWidget(QtWidgets.QWidget):
     def __init__(self, parent=None, label=''):
@@ -284,6 +287,9 @@ class TitleBar(QtWidgets.QWidget):
         mainLayout.addWidget(titleFrame)
 
         self.setLayout(mainLayout)
+
+    def setTitle(self, title):
+        self.label.setText(title)
 
 
 class CharNameValidator(QtGui.QValidator):

@@ -86,3 +86,25 @@ def prefix_chain(start, prefix):
         new_name = join_name([prefix, jnt.nodeName()])
         jnt.rename(new_name)
 
+def create_blend(bnd_jnt, fk_jnt, ik_jnt, ikfk_ctrl, ikfk_attr):
+    pos_bc = pm.createNode('blendColors', name=bnd_jnt.name() + 'pos_bc')
+    rot_bc = pm.createNode('blendColors', name=bnd_jnt.name() + 'rot_bc')
+    scl_bc = pm.createNode('blendColors', name=bnd_jnt.name() + 'scl_bc')
+
+    ikfk_ctrl.attr(ikfk_attr).connect(pos_bc.blender)
+    ikfk_ctrl.attr(ikfk_attr).connect(rot_bc.blender)
+    ikfk_ctrl.attr(ikfk_attr).connect(scl_bc.blender)
+
+    fk_jnt.translate.connect(pos_bc.color1)
+    ik_jnt.translate.connect(pos_bc.color2)
+    pos_bc.output.connect(bnd_jnt.translate)
+
+    fk_jnt.rotate.connect(rot_bc.color1)
+    ik_jnt.rotate.connect(rot_bc.color2)
+    rot_bc.output.connect(bnd_jnt.rotate)
+
+    fk_jnt.scale.connect(scl_bc.color1)
+    ik_jnt.scale.connect(scl_bc.color2)
+    scl_bc.output.connect(bnd_jnt.scale)
+    
+    return pos_bc, rot_bc, scl_bc
