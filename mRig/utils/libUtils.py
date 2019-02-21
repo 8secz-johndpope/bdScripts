@@ -41,7 +41,6 @@ def undoable(function):
     def decoratorCode(*args, **kwargs):
         pm.undoInfo(openChunk=True)
         functionReturn = None
-        print 'adad'
         try:
             functionReturn = function(*args, **kwargs)
             pm.undoInfo(closeChunk=True)

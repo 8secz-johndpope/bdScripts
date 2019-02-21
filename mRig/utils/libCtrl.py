@@ -8,7 +8,6 @@ class Controller(object):
         self.scale = kargs.setdefault('scale', 3)
         self.visual = kargs.setdefault('visual', 'circle')
         self.target = kargs.setdefault('target', None)
-        print self.target
         self.ctrl = None
         self.ctrl_grp = None
 
@@ -41,15 +40,17 @@ class Controller(object):
         self.ctrl = ctrl
         self.ctrl_grp = ctrl_grp
 
-        # pm.addAttr(ctrl,ln='parent',at='message')
-        # pm.connectAttr(ctrlGrp.name() + '.message' , ctrl.name() + '.parent')
+        pm.addAttr(ctrl, ln='parent', at='message')
+        pm.connectAttr(ctrl_grp.name() + '.message', ctrl.name() + '.parent')
 
     def circle_ctrl(self):
         pm.select(cl=1)
         ctrl = pm.circle(name=self.name, c=[0, 0, 0], nr=[1, 0, 0], ch=0, radius=self.scale)[0]
         ctrl_grp = pm.group(ctrl, n=str(self.name + '_grp'))
-        # pm.addAttr(ctrl,ln='parent',at='message')
-        # pm.connectAttr(ctrlGrp.name() + '.message' , ctrl.name() + '.parent')
+
+        pm.addAttr(ctrl, ln='parent', at='message')
+        pm.connectAttr(ctrl_grp.name() + '.message', ctrl.name() + '.parent')
+
         pm.select(cl=1)
         self.ctrl = ctrl
         self.ctrl_grp = ctrl_grp
@@ -92,5 +93,4 @@ class Controller(object):
             else:
                 self.ctrl.attr(attr_name).setKeyable(0)
                 self.ctrl.attr(attr_name).setLocked(1)
-
 

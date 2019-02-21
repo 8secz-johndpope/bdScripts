@@ -46,6 +46,9 @@ class Rig(object):
     def rig(self):
         self.rig_joints = self.create_chain(RIG, bnd=1)
         self.create_groups()
+        pm.parent(self.rig_joints[0], self.rig_grp)
+
+
 
     def create_chain(self, prefix, bnd=0):
         chain = []
