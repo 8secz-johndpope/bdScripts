@@ -38,6 +38,7 @@ class Rig(object):
         self.ik_joints = []
         self.rbn_joints = []
 
+        self.ctrl_obj = []
         self.ik_ctrls = []
         self.fk_ctrls = []
         self.ikfk_ctrl = None

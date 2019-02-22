@@ -22,25 +22,23 @@ MAINGRP = base.MAINGRP
 # ------------------------------
 
 class SpineRig(base.Rig):
-    def __init__(self, name = '', bnd=None, fk=False, ik=False, ribbon=False):
+    def __init__(self, name='', bnd=[], fk=False, ik=False, ribbon=False):
         super(SpineRig, self).__init__(name=name, side='', bnd=bnd)
         self.hip = None
         self.has_fk = fk
         self.has_ik = ik
         self.has_rbn = ribbon
-        self.ikFkSwitchCtrl = None
-    # -----------------------------
 
     def rig(self):
         super(SpineRig, self).rig()
-        if self.has_fk:
-            self.add_fk_rig()
-        if self.has_ik:
-            self.add_ik_rig()
-        if self.has_rbn:
-            self.add_rbn_rig()
-
-        self.create_switch()
+        # if self.has_fk:
+        #     self.add_fk_rig()
+        # if self.has_ik:
+        #     self.add_ik_rig()
+        # if self.has_rbn:
+        #     self.add_rbn_rig()
+        #
+        # self.create_switch()
 
     def set_hip(self, hip):
         find = pm.ls(hip)

@@ -1,10 +1,12 @@
+import pymel.core as pm
 import bdScripts.mRig.rig.mchar as char
 reload(char)
 import bdScripts.mRig.rig.leg_rig as lr
 reload(lr)
 import bdScripts.mRig.rig.arm_rig as ar
 reload(ar)
-
+import bdScripts.mRig.utils.shape_io as sio
+reload(sio)
 
 def rig():
     aya_char = char.Character(name='Aya', root='Root')
@@ -34,3 +36,16 @@ def rig():
 
     aya_char.add_rig(left_leg_rig)
     aya_char.add_rig(right_leg_rig)
+
+
+def save_shapes():
+    ctrls = [attr.node() for attr in pm.ls("*.anim_ctrl")]
+    for ctrl in ctrls:
+        ctrl_out = sio.ShapeIO(ctrl)
+        ctrl_out.save_shape()
+
+def load_shapes():
+    ctrls = [attr.node() for attr in pm.ls("*.anim_ctrl")]
+    for ctrl in ctrls:
+        ctrl_in = sio.ShapeIO(ctrl)
+        ctrl_in.import_shape()

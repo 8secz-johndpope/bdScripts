@@ -1,5 +1,7 @@
 import pymel.core as pm
 import pymel.core.datatypes as dt
+import json
+import os
 
 
 class Controller(object):
@@ -20,20 +22,29 @@ class Controller(object):
             self.circle_ctrl()
         elif self.visual == 'box':
             self.box_ctrl()
+        elif self.visual == 'square':
+            self.square_ctrl()
+        elif self.visual == 'joint':
+            self.joint_ctrl()
+
+        pm.addAttr(self.ctrl, ln="anim_ctrl", dt="string", k=0)
+        self.ctrl.attr('anim_ctrl').set('body')
 
     def box_ctrl(self):
-        defaultPointsList = [(1, -1, 1), (1, -1, -1), (-1, -1, -1), (-1, -1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1),
-                             (-1, 1, 1)]
-        pointsList = []
-        for p in defaultPointsList:
-            pointsList.append((p[0] * self.scale, p[1] * self.scale, p[2] * self.scale))
+        points = [(1, -1, 1), (1, -1, -1), (-1, -1, -1), (-1, -1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1), (-1, 1, 1)]
+        
+        for i in range(len(points)):
+            scaled_pos = (points[i][0] * self.scale,
+                          points[i][1] * self.scale,
+                          points[i][2] * self.scale)
+            points[i] = scaled_pos
 
-        curvePoints = [pointsList[0], pointsList[1], pointsList[2], pointsList[3],
-                       pointsList[7], pointsList[4], pointsList[5], pointsList[6],
-                       pointsList[7], pointsList[3], pointsList[0], pointsList[4],
-                       pointsList[5], pointsList[1], pointsList[2], pointsList[6]]
+        crv_points = [points[0], points[1], points[2], points[3],
+                       points[7], points[4], points[5], points[6],
+                       points[7], points[3], points[0], points[4],
+                       points[5], points[1], points[2], points[6]]
 
-        ctrl = pm.curve(d=1, p=curvePoints)
+        ctrl = pm.curve(d=1, p=crv_points)
         ctrl = pm.rename(ctrl, self.name)
         ctrl_grp = pm.group(ctrl, n=str(self.name + '_grp'))
         pm.select(cl=1)
@@ -52,6 +63,46 @@ class Controller(object):
         pm.connectAttr(ctrl_grp.name() + '.message', ctrl.name() + '.parent')
 
         pm.select(cl=1)
+        self.ctrl = ctrl
+        self.ctrl_grp = ctrl_grp
+
+    def square_ctrl(self):
+        points = [(-1, 1, 0), (1, 1, 0), (1, -1, 0), (-1, -1, 0)]
+
+        for i in range(len(points)):
+            scaled_pos = (points[i][0] * self.scale,
+                          points[i][1] * self.scale,
+                          points[i][2] * self.scale)
+            points[i] = scaled_pos
+
+        crv_points = [points[0], points[1], points[2], points[3], points[0]]
+
+        ctrl = pm.curve(d=1, p=crv_points)
+        ctrl.rename(self.name)
+        ctrl_grp = pm.group(ctrl, n=self.name + '_grp')
+
+        pm.addAttr(ctrl, ln='parent', at='message')
+        pm.connectAttr(ctrl_grp.name() + '.message', ctrl.name() + '.parent')
+        
+        self.ctrl = ctrl
+        self.ctrl_grp = ctrl_grp
+
+    def joint_ctrl(self):
+        circle1 = pm.circle(n=self.name + 'A', nr=(0, 1, 0), c=(0, 0, 0), radius=self.scale)[0]
+        circle2 = pm.circle(n=self.name + 'B', nr=(1, 0, 0), c=(0, 0, 0), radius=self.scale)[0]
+        circle3 = pm.circle(n=self.name + 'C', nr=(0, 0, 1), c=(0, 0, 0), radius=self.scale)[0]
+
+        circle2_shape = circle2.getShape()
+        circle3_shape = circle3.getShape()
+        pm.parent(circle2_shape, circle1, r=True, s=True)
+        pm.parent(circle3_shape, circle1, r=True, s=True)
+        pm.delete(circle2, circle3)
+        ctrl = pm.rename(circle1, self.name)
+        ctrl_grp = pm.group(ctrl, n=self.name + '_grp')
+
+        pm.addAttr(ctrl, ln='parent', at='message')
+        pm.connectAttr(ctrl_grp.name() + '.message', ctrl.name() + '.parent')
+
         self.ctrl = ctrl
         self.ctrl_grp = ctrl_grp
 
@@ -93,4 +144,6 @@ class Controller(object):
             else:
                 self.ctrl.attr(attr_name).setKeyable(0)
                 self.ctrl.attr(attr_name).setLocked(1)
+
+
 
