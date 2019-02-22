@@ -22,7 +22,7 @@ reload(base)
 
 import bdScripts.mRig.utils.libUtils as utils
 reload(utils)
-from bdScripts.mRig.utils.libUtils import (set_bnd, join_name)
+from bdScripts.mRig.utils.libUtils import (join_name)
 
 # ------- Global suffixes ------
 BND = base.BND

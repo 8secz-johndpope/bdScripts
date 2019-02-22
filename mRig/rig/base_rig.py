@@ -6,7 +6,7 @@ reload(libCtrl)
 import bdScripts.mRig.utils.libUtils as utils
 reload(utils)
 
-from bdScripts.mRig.utils.libUtils import (set_bnd, join_name, create_blend)
+from bdScripts.mRig.utils.libUtils import (join_name, create_blend)
 
 
 BND = 'bnd'
@@ -20,7 +20,7 @@ MAINGRP = 'rig_grp'
 GRP = 'grp'
 
 class Rig(object):
-    def __init__(self, name, side, bnd=None):
+    def __init__(self, name, side, bnd=[]):
         self.name = name
 
         self.rig_grp = None
@@ -28,10 +28,11 @@ class Rig(object):
         self.fk_ctrl_grp = None
         self.ik_ctrl_grp = None
 
-        self.side = side
+        self.side = side[0]
+        self.side_sign = side[1]
         self.mirrored = 0
 
-        self.bnd_joints = set_bnd(bnd)
+        self.bnd_joints = self.set_bnd(bnd)
         self.rig_joints = []
         self.fk_joints = []
         self.ik_joints = []
@@ -44,20 +45,18 @@ class Rig(object):
         # -----------------------------
 
     def rig(self):
-        self.rig_joints = self.create_chain(RIG, bnd=1)
+        self.rig_joints = self.create_chain(RIG)
         self.create_groups()
         pm.parent(self.rig_joints[0], self.rig_grp)
 
-
-
-    def create_chain(self, prefix, bnd=0):
+    def create_chain(self, prefix):
         chain = []
         dup_chain = self.rig_joints
-        if bnd:
+        if prefix == RIG:
             dup_chain = self.bnd_joints
 
         for jnt in dup_chain:
-            if bnd:
+            if prefix == RIG:
                 new_jnt = pm.duplicate(jnt, name=RIG + '_' + jnt.name(), po=1)[0]
             else:
                 new_jnt = pm.duplicate(jnt, name=jnt.name().replace(RIG, prefix), po=1)[0]
@@ -70,13 +69,13 @@ class Rig(object):
 
     def create_groups(self):
         pm.select(cl=1)
-        self.rig_grp = pm.group(name=join_name(self.name, MAINGRP))
+        self.rig_grp = pm.group(name=join_name(self.side + self.name, MAINGRP))
         pm.select(cl=1)
-        self.fk_ctrl_grp = pm.group(name=join_name(self.name, FK, GRP))
+        self.fk_ctrl_grp = pm.group(name=join_name(self.side + self.name, FK, GRP))
         pm.select(cl=1)
-        self.ik_ctrl_grp = pm.group(name=join_name(self.name, IK, GRP))
+        self.ik_ctrl_grp = pm.group(name=join_name(self.side + self.name, IK, GRP))
         pm.select(cl=1)
-        self.controllers_grp = pm.group(name=join_name(self.name, CTRL, GRP))
+        self.controllers_grp = pm.group(name=join_name(self.side + self.name, CTRL, GRP))
 
         pm.parent([self.ik_ctrl_grp, self.fk_ctrl_grp], self.controllers_grp)
 
@@ -98,6 +97,20 @@ class Rig(object):
             fk_jnt = pm.ls(jnt.name().replace(RIG, FK))[0]
             ik_jnt = pm.ls(jnt.name().replace(RIG, IK))[0]
             create_blend(jnt, fk_jnt, ik_jnt, self.ikfk_ctrl, 'ikfk')
+            bnd_jnt = pm.ls(jnt.name().replace(RIG + '_', ''))[0]
+            pm.parentConstraint(jnt, bnd_jnt)
 
+    def set_bnd(self, bnd):
+        temp = []
+        for jnt in bnd:
+            if self.side != '':
+                find = pm.ls(self.side + jnt)
+            else:
+                find = pm.ls(jnt)
+            if find:
+                temp.append(find[0])
+            else:
+                pm.warning('Bind joint {} not found'.format(jnt))
+                return None
 
-
+        return temp[:]

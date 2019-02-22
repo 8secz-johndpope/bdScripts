@@ -59,7 +59,7 @@ def join_name(*names):
     return '_'.join(names)
 
 
-def set_bnd(bnd):
+def set_bnd(side, bnd):
     temp = []
     for jnt in bnd:
         find = pm.ls(jnt)
@@ -107,3 +107,17 @@ def create_blend(bnd_jnt, fk_jnt, ik_jnt, ikfk_ctrl, ikfk_attr):
     scl_bc.output.connect(bnd_jnt.scale)
     
     return pos_bc, rot_bc, scl_bc
+
+
+def get_pv_pos(start, mid, end, offset=1):
+    start_v = om.MVector(start.getTranslation(space='world'))
+    mid_v = om.MVector(mid.getTranslation(space='world'))
+    end_v = om.MVector(end.getTranslation(space='world'))
+
+    start_end = end_v - start_v
+    start_mid = mid_v - start_v
+
+    start_mid_projection = start_mid * start_end.normal()
+    projection_v = start_end.normal() * start_mid_projection
+    projection_v = (start_mid - projection_v) * offset + mid_v
+    return [projection_v.x, projection_v.y, projection_v.z]
