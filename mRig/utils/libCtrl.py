@@ -10,6 +10,7 @@ class Controller(object):
         self.scale = kargs.setdefault('scale', 3)
         self.visual = kargs.setdefault('visual', 'circle')
         self.target = kargs.setdefault('target', None)
+        self.orientation = kargs.setdefault('orientation', [1, 0, 0])
         self.ctrl = None
         self.ctrl_grp = None
 
@@ -18,7 +19,7 @@ class Controller(object):
             pm.displayError('No name specified for creating the controller')
             return
 
-        if self.visual == 'circle':
+        if 'circle' in self.visual:
             self.circle_ctrl()
         elif self.visual == 'box':
             self.box_ctrl()
@@ -56,7 +57,12 @@ class Controller(object):
 
     def circle_ctrl(self):
         pm.select(cl=1)
-        ctrl = pm.circle(name=self.name, c=[0, 0, 0], nr=[1, 0, 0], ch=0, radius=self.scale)[0]
+        ori = [1, 0, 0]
+        if self.visual[-1] == 'y':
+            ori = [0, 1, 0]
+        if self.visual[-1] == 'z':
+            ori = [0, 0, 1]
+        ctrl = pm.circle(name=self.name, c=[0, 0, 0], nr=ori, ch=0, radius=self.scale)[0]
         ctrl_grp = pm.group(ctrl, n=str(self.name + '_grp'))
 
         pm.addAttr(ctrl, ln='parent', at='message')

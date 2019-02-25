@@ -25,10 +25,15 @@ class ShapeIO:
     def get_shape_info(self, shape):
         name = shape.name()
         points = []
-        for i in range(pm.getAttr(name + ".controlPoints", s=1)):
-            pos = pm.getAttr(name + ".controlPoints[%i]" % i)
-            pos = [round(v, 2) for v in pos]
+        cvs = shape.getCVs(space='world')
+        for cv in cvs:
+            pos = [round(v, 2) for v in cv]
             points.append(pos)
+        #
+        # for i in range(pm.getAttr(name + ".controlPoints", s=1)):
+        #     pos = pm.getAttr(name + ".controlPoints[%i]" % i)
+        #     pos = [round(v, 2) for v in pos]
+        #     points.append(pos)
 
         self.shape_info['shapes'] = [{'shapeName': name, 'cvsPos': points}]
 
@@ -51,9 +56,10 @@ class ShapeIO:
 
                     cvNum = shape.numCVs()
                     cvPos = shape_info['cvsPos']
-
-                    for i in range(cvNum):
-                        pm.move(shape.name() + '.cv[' + str(i) + ']', cvPos[i][0], cvPos[i][1], cvPos[i][2])
+                    shape.setCVs(cvPos, space='world')
+                    shape.updateCurve()
+                    # for i in range(cvNum):
+                    #     pm.move(shape.name() + '.cv[' + str(i) + ']', cvPos[i][0], cvPos[i][1], cvPos[i][2], a=1, ws=1)
 
     def set_ctrl_folder(self):
         scene = pm.sceneName()

@@ -15,7 +15,7 @@ IK = 'ik'
 DRV = 'drv'
 RIG = 'rig'
 CTRL = 'ctrl'
-CTRLGRP = 'ctrl_grp'
+CTRLGRP = 'ctrl_all_grp'
 MAINGRP = 'rig_grp'
 GRP = 'grp'
 
@@ -42,6 +42,7 @@ class Rig(object):
         self.ik_ctrls = []
         self.fk_ctrls = []
         self.ikfk_ctrl = None
+        self.parent = None
 
         # -----------------------------
 
@@ -76,7 +77,7 @@ class Rig(object):
         pm.select(cl=1)
         self.ik_ctrl_grp = pm.group(name=join_name(self.side + self.name, IK, GRP))
         pm.select(cl=1)
-        self.controllers_grp = pm.group(name=join_name(self.side + self.name, CTRL, GRP))
+        self.controllers_grp = pm.group(name=join_name(self.side + self.name, CTRLGRP))
 
         pm.parent([self.ik_ctrl_grp, self.fk_ctrl_grp], self.controllers_grp)
 
@@ -115,3 +116,19 @@ class Rig(object):
                 return None
 
         return temp[:]
+
+    def create_ikfk_ctrl(self, attach_to, offset):
+        # Create IKFK switch ctrl
+        ctrl_name = join_name(attach_to.name(), 'ikfk', CTRL)
+        fkik_ctrl_obj = self.create_ctrl(ctrl_name, 1, 'box', attach_to, 1, 1)
+        pm.parent(fkik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
+        self.ikfk_ctrl = fkik_ctrl_obj.ctrl
+        pm.parent(fkik_ctrl_obj.ctrl_grp, self.controllers_grp)
+        fkik_ctrl_obj.add_float_attr('ikfk', 0, 1)
+        fkik_ctrl_obj.offset_ctrl_grp(offset)
+        fkik_ctrl_obj.lock_hide_attr(['translate_XYZ', 'rotate_XYZ', 'scale_XYZ', 'visibility'])
+
+    def set_parent(self, parent, ctrl_parent):
+        self.parent = parent
+        pm.parent(self.controllers_grp, ctrl_parent)
+

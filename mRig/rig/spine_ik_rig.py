@@ -1,17 +1,3 @@
-###############################################################################
-#    Module:       spine_ik_rig
-#    Date:         27.07.2017
-#    Author:       Oleg Solovjov
-#
-#    Description:    Spine ik rig. Based on ribbon joint rig.
-#
-#    Globals:
-#
-#    Classes:
-#
-#    Functions:
-#
-###############################################################################
 import pymel.core as pm
 
 from ..utils import libCtrl as libCtrl
@@ -35,11 +21,11 @@ CTRLGRP = base.CTRLGRP
 MAINGRP = base.MAINGRP
 # ------------------------------
 
-class SpineIkSplineRig(base.RIG):
-    def __init__(self, name, bnd):
-        super(SpineIkSplineRig, self).__init__(name='', side='', bnd=None)
 
-        self.hip = None
+class SpineIkSplineRig:
+    def __init__(self, name, ik_joints):
+        self.ik_joints = ik_joints[1:]
+        self.hip = ik_joints[0]
         self.ik_handle = None
         self.ik_crv = None
         self.ik_drv_crv = None
@@ -53,14 +39,11 @@ class SpineIkSplineRig(base.RIG):
         Creates ik ribbon spine rig.
         :return: Returns nothing.
         '''
-        super(SpineIkSplineRig, self).createHierarchy()
-        self.create_ik_chain()
-        self.bind_anim()
         self.create_ik_spline()
         self.create_ik_ctrl()
         self.create_clusters()
         self.create_connections()
-        self.cleanUp()
+        # self.cleanUp()
 
     def create_ik_chain(self):
         for jnt in self.rig_joints:
@@ -84,8 +67,8 @@ class SpineIkSplineRig(base.RIG):
                                     sol='ikSplineSolver', name='spine_ikSpline')[0]
         self.ik_handle.attr('v').set(0)
 
-        pm.parent(self.ik_crv, self.rigGrp)
-        pm.parent(self.ik_handle, self.rigGrp)
+        # pm.parent(self.ik_crv, self.rigGrp)
+        # pm.parent(self.ik_handle, self.rigGrp)
 
     def create_ik_ctrl(self):
         '''
@@ -149,8 +132,8 @@ class SpineIkSplineRig(base.RIG):
                 n=self.ik_crv.name() + '_wire')
         wire_transform = pm.listConnections((wire_def[0].name() + '.baseWire[0]'))[0]
 
-        pm.parent(self.ik_drv_crv, self.rigGrp)
-        pm.parent(wire_transform , self.rigGrp)
+        # pm.parent(self.ik_drv_crv, self.rigGrp)
+        # pm.parent(wire_transform , self.rigGrp)
 
         for i, cv in enumerate(['.cv[0:1]', '.cv[2]', '.cv[3:4]']):
             cluster = pm.cluster(self.ik_drv_crv.name() + cv)
@@ -177,30 +160,30 @@ class SpineIkSplineRig(base.RIG):
 
         self.spine_roll_pma = pma
 
-    def cleanUp(self):
-        for ctrl in self.ik_ctrl:
-            for attr in ['sx', 'sy', 'sz', 'v']:
-                lockHideAttr(ctrl, attr)
-
-    def unCleanUp(self):
-        super(SpineIkSplineRig, self).unCleanUp()
-
-
-    def bind_anim(self):
-        '''
-        Binds ribbon stripe rig joints to result joints.
-        Binds with parentConstraints.
-        :return: Returns nothing.
-        '''
-        if not len(self.rig_joints):
-            msg = "Please set result joints with setResJoints() method before."
-            self.logger.error(msg)
-            raise ValueError, msg
-
-        for i in range(len(self.rig_joints)):
-            pc = pm.parentConstraint(self.ik_joints[i]
-                                     , self.rig_joints[i]
-                                     , mo=True, w=1.0)[0]
-            self.appendToNodeList(pc)
+    # def cleanUp(self):
+    #     for ctrl in self.ik_ctrl:
+    #         for attr in ['sx', 'sy', 'sz', 'v']:
+    #             lockHideAttr(ctrl, attr)
+    #
+    # def unCleanUp(self):
+    #     super(SpineIkSplineRig, self).unCleanUp()
+    #
+    #
+    # def bind_anim(self):
+    #     '''
+    #     Binds ribbon stripe rig joints to result joints.
+    #     Binds with parentConstraints.
+    #     :return: Returns nothing.
+    #     '''
+    #     if not len(self.rig_joints):
+    #         msg = "Please set result joints with setResJoints() method before."
+    #         self.logger.error(msg)
+    #         raise ValueError, msg
+    #
+    #     for i in range(len(self.rig_joints)):
+    #         pc = pm.parentConstraint(self.ik_joints[i]
+    #                                  , self.rig_joints[i]
+    #                                  , mo=True, w=1.0)[0]
+    #         self.appendToNodeList(pc)
 
 

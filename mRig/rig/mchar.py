@@ -20,6 +20,7 @@ CTRL = base.CTRL
 CTRLGRP = base.CTRLGRP
 MAINGRP = base.MAINGRP
 GRP = base.GRP
+WORLDCTRL = 'world_ctrl'
 # ------------------------------
 
 class Character():
@@ -32,15 +33,17 @@ class Character():
         self.geometry_grp = None
         self.subrigs_grp = None
         self.rigs = []
+        self.world_ctrl = None
 
     def create(self):
         self.create_groups()
+        self.create_world_ctrl()
 
     def create_groups(self):
         pm.select(cl=1)
         self.top_grp = pm.group(name = join_name(self.name, 'rig', GRP))
         pm.select(cl=1)
-        self.controllers_grp = pm.group(name = join_name(self.name, CTRL, GRP))
+        self.controllers_grp = pm.group(name = join_name(self.name, CTRLGRP))
         pm.select(cl=1)
         self.joints_grp = pm.group(name = join_name(self.name, 'joints', GRP))
         pm.select(cl=1)
@@ -52,11 +55,21 @@ class Character():
 
     def add_rig(self, rig):
         self.rigs.append(rig)
-        pm.parent(rig.controllers_grp, self.controllers_grp)
+        pm.parent(rig.controllers_grp, self.world_ctrl)
         pm.parent(rig.rig_grp, self.subrig_grp)
 
-
-
+    def create_world_ctrl(self):
+        ctrl_name = join_name(self.name, WORLDCTRL)
+        pm.select(cl=1)
+        temp_jnt = pm.joint()
+        pm.select(cl=1)
+        world_ctrl_obj = base.Rig.create_ctrl(ctrl_name, 20, 'circley', temp_jnt, 1, 1)
+        pm.delete(temp_jnt)
+        self.world_ctrl = world_ctrl_obj.ctrl
+        pm.parent(world_ctrl_obj.ctrl_grp, self.controllers_grp)
+        world_ctrl_obj.add_float_attr('ikfk', 0, 1)
+        world_ctrl_obj.lock_hide_attr(['scale_XYZ', 'visibility'])
+        pm.parentConstraint(self.world_ctrl, self.root_jnt, mo=1)
 
 
 

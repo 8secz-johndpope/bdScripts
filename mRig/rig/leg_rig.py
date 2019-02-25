@@ -17,6 +17,7 @@ class LegRig(rn.Rig):
         super(LegRig, self).rig()
         self.rig_fk()
         self.rig_ik()
+        self.create_ikfk_ctrl(self.bnd_joints[2], [10 * self.side_sign, 0, 0])
         self.connect_chains()
         self.connect_to_hips()
 
@@ -154,16 +155,6 @@ class LegRig(rn.Rig):
             pm.parent(ik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
             self.ik_ctrls.append(ik_ctrl_obj.ctrl)
             ik_ctrl_obj.lock_hide_attr(['scale_XYZ', 'visibility'])
-
-            # Create IKFK switch foot ctrl
-            ctrl_name = rn.join_name((self.side + 'Leg'), 'ikfk', rn.CTRL)
-            fkik_ctrl_obj= self.create_ctrl(ctrl_name, 1, 'box', ik_jnt, 1, 0)
-            pm.parent(fkik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
-            self.ikfk_ctrl = fkik_ctrl_obj.ctrl
-            pm.parent(fkik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
-            fkik_ctrl_obj.add_float_attr('ikfk', 0, 1)
-            fkik_ctrl_obj.offset_ctrl_grp([10 * self.side_sign, 0, 0])
-            fkik_ctrl_obj.lock_hide_attr(['translate_XYZ', 'rotate_XYZ', 'scale_XYZ', 'visibility'])
 
             # Create ik pole vector ctrl
             ik_jnt = self.bnd_joints[1]

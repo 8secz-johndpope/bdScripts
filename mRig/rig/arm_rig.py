@@ -18,6 +18,7 @@ class ArmRig(rn.Rig):
         super(ArmRig, self).rig()
         self.rig_fk()
         self.rig_ik()
+        self.create_ikfk_ctrl(self.bnd_joints[-1], [10 * self.side_sign, 0, 0])
         self.connect_chains()
         self.connect_to_clav()
 
@@ -36,7 +37,7 @@ class ArmRig(rn.Rig):
         extra_jnt = pm.duplicate(self.ik_joints[-1])[0]
         extra_jnt.rename(self.ik_joints[-1].name() + '_palm')
         pm.parent(extra_jnt, self.ik_joints[-1])
-        extra_jnt.translateX.set(4)
+        extra_jnt.translateX.set(4 * self.side_sign)
         self.ik_joints.append(extra_jnt)
 
         pm.parent(self.ik_joints[0], self.rig_grp)
@@ -49,7 +50,6 @@ class ArmRig(rn.Rig):
 
         pm.select(cl=1)
         iks_grp = pm.group(n=self.side + '_arm_ikHandles_grp')
-        print iks_grp
         iks_grp.visibility.set(0)
         wrist_pos = self.ik_joints[2].getTranslation(space='world')
         iks_grp.setPivots(wrist_pos)
@@ -85,16 +85,6 @@ class ArmRig(rn.Rig):
             pm.parent(ik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
             self.ik_ctrls.append(ik_ctrl_obj.ctrl)
             ik_ctrl_obj.lock_hide_attr(['scale_XYZ', 'visibility'])
-
-            # Create IKFK switch ctrl
-            ctrl_name = rn.join_name((self.side + 'Arm'), 'ikfk', rn.CTRL)
-            fkik_ctrl_obj= self.create_ctrl(ctrl_name, 1, 'box', ik_jnt, 1, 1)
-            pm.parent(fkik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
-            self.ikfk_ctrl = fkik_ctrl_obj.ctrl
-            pm.parent(fkik_ctrl_obj.ctrl_grp, self.ik_ctrl_grp)
-            fkik_ctrl_obj.add_float_attr('ikfk', 0, 1)
-            fkik_ctrl_obj.offset_ctrl_grp([10 * self.side_sign, 0, 0])
-            fkik_ctrl_obj.lock_hide_attr(['translate_XYZ', 'rotate_XYZ', 'scale_XYZ', 'visibility'])
 
             # Create ik pole vector ctrl
             ik_jnt = self.bnd_joints[1]

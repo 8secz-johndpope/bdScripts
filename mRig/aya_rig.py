@@ -7,10 +7,26 @@ import bdScripts.mRig.rig.arm_rig as ar
 reload(ar)
 import bdScripts.mRig.utils.shape_io as sio
 reload(sio)
+import bdScripts.mRig.rig.spine_rig as sr
+reload(sr)
+import bdScripts.mRig.rig.upper_body_rig as ubr
+reload(ubr)
 
 def rig():
     aya_char = char.Character(name='Aya', root='Root')
     aya_char.create()
+
+    # Create upper body rig ( includes the hip rig )
+    hips_jnt = ['Hips']
+    upper_body_rig = ubr.UpperBodyRig(name='Hips', side=['', 0], bnd=hips_jnt)
+    upper_body_rig.rig()
+
+    aya_char.add_rig(upper_body_rig)
+
+    # Create spine rig
+    bind_jnt = ['Spine', 'Spine1', 'Spine2']
+    spine_rig = sr.SpineIkFkRig(name='Spine', bnd=bind_jnt)
+    spine_rig.rig()
 
     # Create arms rig
     bind_jnt = ['Arm', 'ForeArm', 'Hand']
@@ -18,10 +34,10 @@ def rig():
 
     left_arm_rig = ar.ArmRig(side=['Left', 1], bnd=bind_jnt, clav=clavicle)
     left_arm_rig.rig()
-
-    right_arm_rig = ar.ArmRig(side=['Right', 1], bnd=bind_jnt, clav=clavicle)
+    #
+    right_arm_rig = ar.ArmRig(side=['Right', -1], bnd=bind_jnt, clav=clavicle)
     right_arm_rig.rig()
-
+    #
     aya_char.add_rig(left_arm_rig)
     aya_char.add_rig(right_arm_rig)
     # Create legs rig
@@ -36,6 +52,8 @@ def rig():
 
     aya_char.add_rig(left_leg_rig)
     aya_char.add_rig(right_leg_rig)
+
+    aya_char.add_rig(spine_rig)
 
 
 def save_shapes():
