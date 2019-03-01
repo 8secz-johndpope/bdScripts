@@ -19,6 +19,7 @@ class ShapeIO:
             self.get_shape_info(shape)
 
             shape_file = os.path.join(self.ctrl_folder, self.ctrl + '.ctrl')
+            print shape_file
             with open(shape_file, 'w') as outfile:
                 json.dump(self.shape_info, outfile)
 

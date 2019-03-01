@@ -106,7 +106,7 @@ class Rig(object):
         temp = []
         for jnt in bnd:
             if self.side != '':
-                find = pm.ls(self.side + jnt)
+                find = pm.ls(jnt.replace('_SIDE_', self.side))
             else:
                 find = pm.ls(jnt)
             if find:

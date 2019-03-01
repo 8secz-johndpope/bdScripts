@@ -12,7 +12,7 @@ class ArmRig(rn.Rig):
     def __init__(self, side, bnd, clav):
         super(ArmRig, self).__init__('Arm', side, bnd)
         self.parent = None
-        self.clav = pm.ls(self.side + clav)[0]
+        self.clav = pm.ls(clav.replace('_SIDE_', self.side))[0]
 
     def rig(self):
         super(ArmRig, self).rig()
